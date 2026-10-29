@@ -58,8 +58,8 @@ struct HomeView: View {
 
     @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("confetti", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var confetti: Bool = false
-    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstLaunch: Bool = true
+    @AppStorage("confetti", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var confetti: Bool = false
+    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var firstLaunch: Bool = true
 
     init(topEdge: CGFloat, bottomEdge: CGFloat) {
         self.topEdge = topEdge
