@@ -89,20 +89,7 @@ struct ContentView: View {
                 defaults.set(true, forKey: "showCents")
                 defaults.set(true, forKey: "animated")
 
-                if NSUbiquitousKeyValueStore.default.string(forKey: "currency") == nil {
-                    NSUbiquitousKeyValueStore.default.set("USD", forKey: "currency")
-                } else {
-                    currency = NSUbiquitousKeyValueStore.default.string(forKey: "currency")!
-                }
-
                 defaults.set(2, forKey: "numberEntryType")
-            } else {
-                if let holdingCurrency = NSUbiquitousKeyValueStore.default.string(forKey: "currency") {
-                    currency = holdingCurrency
-                } else {
-                    currency = "USD"
-                    NSUbiquitousKeyValueStore.default.set("USD", forKey: "currency")
-                }
             }
 
             if dataMigration1 {

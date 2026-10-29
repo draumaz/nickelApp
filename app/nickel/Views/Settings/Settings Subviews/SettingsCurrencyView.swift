@@ -1,6 +1,6 @@
 //
 //  SettingsCurrencyView.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 5/11/23.
 //
@@ -64,8 +64,6 @@ struct SettingsCurrencyView: View {
                 withAnimation(.easeIn(duration: 0.15)) {
                   currencyCode = currency.code
                 }
-
-                NSUbiquitousKeyValueStore.default.set(currency.code, forKey: "currency")
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                   self.presentationMode.wrappedValue.dismiss()

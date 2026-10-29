@@ -253,7 +253,7 @@ struct LogView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
                         updatedRecurring = false
                     }
-                } else if !NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
+                } else {
                     dataController.updateRecurringTransactions()
                 }
             }
@@ -261,9 +261,7 @@ struct LogView: View {
                 searchMode = true
             }
             .onAppear {
-                if !NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
-                    dataController.updateRecurringTransactions()
-                }
+                dataController.updateRecurringTransactions()
             }
 //            .animation(.spring(duration: 0.5), value: released)
 //            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: pullStatus)
