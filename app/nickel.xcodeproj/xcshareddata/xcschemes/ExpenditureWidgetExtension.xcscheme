@@ -18,7 +18,7 @@
                BlueprintIdentifier = "53B1D189288ED7E400E28062"
                BuildableName = "ExpenditureWidgetExtension.appex"
                BlueprintName = "ExpenditureWidgetExtension"
-               ReferencedContainer = "container:dime.xcodeproj">
+               ReferencedContainer = "container:nickel.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -30,9 +30,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "5327D282287C697400F76ADF"
-               BuildableName = "dime.app"
-               BlueprintName = "dime"
-               ReferencedContainer = "container:dime.xcodeproj">
+               BuildableName = "nickel.app"
+               BlueprintName = "nickel"
+               ReferencedContainer = "container:nickel.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -66,16 +66,16 @@
             BlueprintIdentifier = "53B1D189288ED7E400E28062"
             BuildableName = "ExpenditureWidgetExtension.appex"
             BlueprintName = "ExpenditureWidgetExtension"
-            ReferencedContainer = "container:dime.xcodeproj">
+            ReferencedContainer = "container:nickel.xcodeproj">
          </BuildableReference>
       </RemoteRunnable>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5327D282287C697400F76ADF"
-            BuildableName = "dime.app"
-            BlueprintName = "dime"
-            ReferencedContainer = "container:dime.xcodeproj">
+            BuildableName = "nickel.app"
+            BlueprintName = "nickel"
+            ReferencedContainer = "container:nickel.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <EnvironmentVariables>
@@ -109,9 +109,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5327D282287C697400F76ADF"
-            BuildableName = "dime.app"
-            BlueprintName = "dime"
-            ReferencedContainer = "container:dime.xcodeproj">
+            BuildableName = "nickel.app"
+            BlueprintName = "nickel"
+            ReferencedContainer = "container:nickel.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "5327D282287C697400F76ADF"
-               BuildableName = "dime.app"
-               BlueprintName = "dime"
-               ReferencedContainer = "container:dime.xcodeproj">
+               BuildableName = "nickel.app"
+               BlueprintName = "nickel"
+               ReferencedContainer = "container:nickel.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -47,9 +47,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5327D282287C697400F76ADF"
-            BuildableName = "dime.app"
-            BlueprintName = "dime"
-            ReferencedContainer = "container:dime.xcodeproj">
+            BuildableName = "nickel.app"
+            BlueprintName = "nickel"
+            ReferencedContainer = "container:nickel.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <EnvironmentVariables>
@@ -76,9 +76,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5327D282287C697400F76ADF"
-            BuildableName = "dime.app"
-            BlueprintName = "dime"
-            ReferencedContainer = "container:dime.xcodeproj">
+            BuildableName = "nickel.app"
+            BlueprintName = "nickel"
+            ReferencedContainer = "container:nickel.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

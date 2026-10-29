@@ -53,7 +53,7 @@ Dime is a 100% free, open-source personal finance tracker built with iOS design 
   `git clone https://github.com/rarfell/dimeApp.git`
 - For branch selection use:
   `--single-branch --branch [branchname]` after `clone`
-- After completion, open `dime.xcodeproj` using Xcode.
+- After completion, open `nickel.xcodeproj` using Xcode.
 - Please let all dependecies update automatically but we would recommend to run
   `File > Packages > Resolve Package Versions` to ensure, everything is updated.
 

@@ -1,6 +1,6 @@
 //
-//  dimeApp.swift
-//  dime
+//  nickelApp.swift
+//  nickel
 //
 //  Created by Rafael Soh on 11/7/22.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct dimeApp: App {
+struct nickelApp: App {
     @StateObject var dataController: DataController
     @StateObject var appLockVM = AppLockViewModel()
 
