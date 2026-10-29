@@ -137,7 +137,7 @@ struct ExpenditureWidgetEntryView: View {
     @Environment(\.widgetFamily) var widgetFamily
     let entry: Provider.Entry
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -596,7 +596,7 @@ struct RecentTransactionsDollarView: View {
     var net: Bool
     var bigger: Bool = false
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }

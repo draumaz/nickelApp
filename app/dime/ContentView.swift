@@ -24,7 +24,7 @@ struct ContentView: View {
     // converts category colors to hex codes
     @AppStorage("dataMigration2", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var dataMigration2: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = "USD"
 
     @State var showIntro: Bool = false
     @State var showUpdate: Bool = false
@@ -90,7 +90,7 @@ struct ContentView: View {
                 defaults.set(true, forKey: "animated")
 
                 if NSUbiquitousKeyValueStore.default.string(forKey: "currency") == nil {
-                    NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode!, forKey: "currency")
+                    NSUbiquitousKeyValueStore.default.set("USD", forKey: "currency")
                 } else {
                     currency = NSUbiquitousKeyValueStore.default.string(forKey: "currency")!
                 }
@@ -100,8 +100,8 @@ struct ContentView: View {
                 if let holdingCurrency = NSUbiquitousKeyValueStore.default.string(forKey: "currency") {
                     currency = holdingCurrency
                 } else {
-                    currency = Locale.current.currencyCode!
-                    NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode!, forKey: "currency")
+                    currency = "USD"
+                    NSUbiquitousKeyValueStore.default.set("USD", forKey: "currency")
                 }
             }
 

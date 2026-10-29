@@ -79,11 +79,9 @@ struct InsightsView: View {
                             Image(systemName: "chevron.up.chevron.down")
                                 .font(.system(.caption, design: .rounded).weight(.medium))
                         }
-                        .padding(3)
-                        .padding(.horizontal, 6)
                         .foregroundColor(Color.PrimaryText.opacity(0.9))
-                        .background(Color.Outline, in: RoundedRectangle(cornerRadius: 6))
                     }
+                    .buttonStyle(.glass)
                     .popover(present: $showTimeMenu, attributes: {
                         $0.position = .absolute(
                             originAnchor: .bottomRight,
@@ -126,7 +124,7 @@ struct HorizontalPieChartView: View {
     @FetchRequest private var allCategories: FetchedResults<Category>
     @FetchRequest private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -454,7 +452,7 @@ struct FilteredCategoryInsightsView: View {
 struct FilteredDateInsightsView: View {
     @FetchRequest private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -599,7 +597,7 @@ struct SingleGraphView: View {
     @State var selectedDateAmount: Double = 0
 
     var currencySymbol: String
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = "USD"
     var showCents: Bool
 
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var firstDayOfMonth: Int = 1
@@ -922,7 +920,7 @@ struct WeekGraphView: View {
         SortDescriptor(\.day)
     ]) private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1349,7 +1347,7 @@ struct MonthGraphView: View {
 
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var firstDayOfMonth: Int = 1
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1731,7 +1729,7 @@ struct YearGraphView: View {
         SortDescriptor(\.day)
     ]) private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var currency: String = "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -2167,8 +2165,7 @@ struct ChartTimePickerView: View {
         .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
         .padding(4)
         .frame(width: 120)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
+        .glassEffect(.regular, in: .rect(cornerRadius: 12))
         .onChange(of: timeframe) { _ in
             if timeframe == .week {
                 chartType = 1

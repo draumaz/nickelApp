@@ -16,12 +16,13 @@ struct WelcomeSheetFeatureRow: Hashable {
 
 struct WelcomeSheetView: View {
     @Environment(\.dismiss) var dismiss
+    @Environment(\.managedObjectContext) var moc
+    @EnvironmentObject var dataController: DataController
 
     @FetchRequest(sortDescriptors: [
         SortDescriptor(\.dateCreated)
     ]) private var categories: FetchedResults<Category>
 
-    @State var firstPage = true
     @State var visibleLines: Int = 0
 
     let timer = Timer.publish(every: 0.16, on: .main, in: .common).autoconnect()
@@ -34,84 +35,112 @@ struct WelcomeSheetView: View {
 
     var body: some View {
         VStack {
-            if firstPage {
-                VStack(spacing: 50) {
-                    VStack(spacing: 2) {
-                        Image("AppIcon1_EG")
-                            .resizable()
-                            .frame(width: 70, height: 70)
-                            .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                            .padding(.bottom, 20)
+            VStack(spacing: 50) {
+                VStack(spacing: 2) {
+                    Image("AppIcon1_EG")
+                        .resizable()
+                        .frame(width: 70, height: 70)
+                        .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                        .padding(.bottom, 20)
 
-                        Text("dime_name")
-                            .font(.system(size: 30, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.PrimaryText)
+                    Text("dime_name")
+                        .font(.system(size: 30, weight: .medium, design: .rounded))
+                        .foregroundColor(Color.PrimaryText)
 
-                        Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
-                            .font(.system(size: 14, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(.bottom, 15)
-                    }
-                    .frame(height: UIScreen.main.bounds.height / 3.4, alignment: .bottom)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(Color.SubtitleText)
+                        .padding(.bottom, 15)
+                }
+                .frame(height: UIScreen.main.bounds.height / 3.4, alignment: .bottom)
+                .frame(maxWidth: .infinity, alignment: .center)
 
-                    VStack(alignment: .leading, spacing: 22) {
-                        ForEach(welcomeFeatures.indices, id: \.self) { rowIndex in
-                            if rowIndex < visibleLines {
-                                HStack(alignment: .top, spacing: 15) {
-                                    Image(systemName: welcomeFeatures[rowIndex].icon)
-                                        .font(.system(size: 25, weight: .regular))
+                VStack(alignment: .leading, spacing: 22) {
+                    ForEach(welcomeFeatures.indices, id: \.self) { rowIndex in
+                        if rowIndex < visibleLines {
+                            HStack(alignment: .top, spacing: 15) {
+                                Image(systemName: welcomeFeatures[rowIndex].icon)
+                                    .font(.system(size: 25, weight: .regular))
+                                    .foregroundColor(Color.SubtitleText)
+                                    .frame(width: 40, alignment: .leading)
+                                    .offset(y: 2)
+
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(LocalizedStringKey(welcomeFeatures[rowIndex].header))
+                                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                                        .foregroundColor(Color.PrimaryText)
+
+                                    Text(LocalizedStringKey(welcomeFeatures[rowIndex].subtitle))
+                                        .font(.system(size: 16, weight: .regular, design: .rounded))
+                                        .fixedSize(horizontal: false, vertical: true)
                                         .foregroundColor(Color.SubtitleText)
-                                        .frame(width: 40, alignment: .leading)
-                                        .offset(y: 2)
-
-                                    VStack(alignment: .leading, spacing: 5) {
-                                        Text(LocalizedStringKey(welcomeFeatures[rowIndex].header))
-                                            .font(.system(size: 18, weight: .medium, design: .rounded))
-                                            .foregroundColor(Color.PrimaryText)
-
-                                        Text(LocalizedStringKey(welcomeFeatures[rowIndex].subtitle))
-                                            .font(.system(size: 16, weight: .regular, design: .rounded))
-                                            .fixedSize(horizontal: false, vertical: true)
-                                            .foregroundColor(Color.SubtitleText)
-                                    }
                                 }
-                                .transition(AnyTransition.opacity.combined(with: .move(edge: .leading)))
                             }
+                            .transition(AnyTransition.opacity.combined(with: .move(edge: .leading)))
                         }
-                    }
-                    .padding(.horizontal, 5)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .onReceive(timer) { _ in
-                        withAnimation(.easeInOut(duration: 0.4)) {
-                            if visibleLines < 3 {
-                                visibleLines += 1
-                            } else {
-                                timer.upstream.connect().cancel()
-                            }
-                        }
-                    }
-
-                    Button {
-                        withAnimation {
-                            firstPage = false
-                        }
-                    } label: {
-                        Text("Get Started")
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.LightIcon)
-                            .padding(.vertical, 12)
-                            .frame(maxWidth: .infinity)
-                            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.DarkBackground))
                     }
                 }
-                .padding(30)
-            } else {
-                CategoryView(mode: .welcome)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .padding(.horizontal, 5)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .onReceive(timer) { _ in
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        if visibleLines < 3 {
+                            visibleLines += 1
+                        } else {
+                            timer.upstream.connect().cancel()
+                        }
+                    }
+                }
+
+                Button {
+                    createDefaultCategories()
+                    dismiss()
+                } label: {
+                    Text("Get Started")
+                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .foregroundColor(Color.LightIcon)
+                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glassProminent)
+                .tint(Color.DarkBackground)
             }
+            .padding(30)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.PrimaryBackground)
+    }
+
+    // Seeds the built-in suggested categories so onboarding doesn't need a category picker.
+    // Skipped if categories already exist (e.g. data was imported before onboarding finished).
+    private func createDefaultCategories() {
+        guard categories.isEmpty else { return }
+
+        // Give each expense category its own colour; "#" entries in the palette are custom-colour placeholders.
+        let colours = Color.colorArray.filter { $0 != "#" }
+
+        for (index, suggestion) in SuggestedCategory.expenses.enumerated() {
+            let category = Category(context: moc)
+            category.name = NSLocalizedString(suggestion.name, comment: "category name")
+            category.emoji = suggestion.emoji
+            category.dateCreated = Date.now
+            category.id = UUID()
+            category.colour = colours.isEmpty ? "#FFFFFF" : colours[index % colours.count]
+            category.order = Int64(index)
+            category.income = false
+        }
+
+        for (index, suggestion) in SuggestedCategory.incomes.enumerated() {
+            let category = Category(context: moc)
+            category.name = NSLocalizedString(suggestion.name, comment: "category name")
+            category.emoji = suggestion.emoji
+            category.dateCreated = Date.now
+            category.id = UUID()
+            category.colour = "#76FBB0"
+            category.order = Int64(index)
+            category.income = true
+        }
+
+        dataController.save()
     }
 }
