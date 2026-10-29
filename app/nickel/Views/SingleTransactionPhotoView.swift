@@ -1,6 +1,6 @@
 //
 //  SingleTransactionPhotoView.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 30/9/23.
 //

@@ -1,6 +1,6 @@
 //
 //  SettingsAppIconView.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 5/11/23.
 //

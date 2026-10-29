@@ -1,6 +1,6 @@
 //
 //  InsightsWidget.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 14/8/22.
 //
@@ -494,7 +494,7 @@ struct InsightsWidgetEntryView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .widgetURL(URL(string: "dimeapp://insights"))
+            .widgetURL(URL(string: "nickelapp://insights"))
             .containerBackground(for: .widget) {
                 Color.PrimaryBackground
             }
@@ -640,7 +640,7 @@ struct InsightsWidgetEntryView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .widgetURL(URL(string: "dimeapp://insights"))
+            .widgetURL(URL(string: "nickelapp://insights"))
         }
     }
 
@@ -836,7 +836,7 @@ struct InsightsWidgetCategoryBreakdownView: View {
                     .frame(maxHeight: .infinity)
             }
 
-            Link(destination: URL(string: "dimeapp://newExpense")!) {
+            Link(destination: URL(string: "nickelapp://newExpense")!) {
                 HStack(spacing: 4) {
                     Image(systemName: "plus")
                         .font(.system(size: 9, weight: .medium, design: .rounded))

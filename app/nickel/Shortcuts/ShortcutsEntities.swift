@@ -1,6 +1,6 @@
 //
 //  ShortcutsEntities.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 1/8/23.
 //

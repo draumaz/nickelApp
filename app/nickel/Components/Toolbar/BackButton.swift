@@ -1,6 +1,6 @@
 //
 //  BackButton.swift
-//  dime
+//  nickel
 //
 //  Created by Yumi on 2023-10-24.
 //

@@ -9,7 +9,7 @@ import SwiftUI
 import WidgetKit
 
 @main
-struct DimeWidgets: WidgetBundle {
+struct NickelWidgets: WidgetBundle {
     var body: some Widget {
         RecentExpenditureWidget()
         InsightsWidget()

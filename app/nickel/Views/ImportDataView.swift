@@ -1,6 +1,6 @@
 //
 //  ImportDataView.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 21/8/23.
 //

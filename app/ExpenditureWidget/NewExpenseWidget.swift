@@ -78,7 +78,7 @@ struct NewExpenseWidgetEntryView: View {
                     .background(Color.white, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
                     .padding(.horizontal, 9)
             }
-            .widgetURL(URL(string: "dimeapp://newExpense"))
+            .widgetURL(URL(string: "nickelapp://newExpense"))
             .containerBackground(for: .widget) {
                 AccessoryWidgetBackground()
             }
@@ -96,7 +96,7 @@ struct NewExpenseWidgetEntryView: View {
                     .padding(.horizontal, 9)
             }
             .padding(0.5)
-            .widgetURL(URL(string: "dimeapp://newExpense"))
+            .widgetURL(URL(string: "nickelapp://newExpense"))
         }
     }
 }

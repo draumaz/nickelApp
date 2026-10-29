@@ -1,6 +1,6 @@
 //
 //  TransactionCategoryPicker.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 20/11/23.
 //

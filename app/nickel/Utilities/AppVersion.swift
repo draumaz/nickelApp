@@ -1,6 +1,6 @@
 //
 //  AppVersion.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 25/8/22.
 //

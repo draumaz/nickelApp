@@ -1,6 +1,6 @@
 //
 //  Wiggle.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 9/7/23.
 //

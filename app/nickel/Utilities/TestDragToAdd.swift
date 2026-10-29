@@ -1,6 +1,6 @@
 //
 //  TestDragToAdd.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 15/10/23.
 //

@@ -174,7 +174,7 @@ struct LockBudgetWidgetEntryView: View {
                 Text("Select budget in widget options")
             } else {
                 Text("\(entry.budget.emoji) \(currencySymbol)\(difference, specifier: (showCents && difference < 100) ? "%.2f" : "%.0f") \(subtitle)")
-                    .widgetURL(URL(string: "dimeapp://budget?budget=\(entry.budget.name)"))
+                    .widgetURL(URL(string: "nickelapp://budget?budget=\(entry.budget.name)"))
             }
 
         case .accessoryCircular:
@@ -196,7 +196,7 @@ struct LockBudgetWidgetEntryView: View {
                         Text("\(Int(round(percent * 100)))%")
                     }
                     .gaugeStyle(AccessoryCircularGaugeStyle())
-                    .widgetURL(URL(string: "dimeapp://budget?budget=\(entry.budget.name)"))
+                    .widgetURL(URL(string: "nickelapp://budget?budget=\(entry.budget.name)"))
                     .containerBackground(for: .widget) { Color.clear }
                 }
             } else {
@@ -221,7 +221,7 @@ struct LockBudgetWidgetEntryView: View {
                             Text("\(Int(round(percent * 100)))%")
                         }
                         .gaugeStyle(AccessoryCircularGaugeStyle())
-                        .widgetURL(URL(string: "dimeapp://budget?budget=\(entry.budget.name)"))
+                        .widgetURL(URL(string: "nickelapp://budget?budget=\(entry.budget.name)"))
                     } else {
                         EmptyView()
                     }
@@ -270,7 +270,7 @@ struct LockBudgetWidgetEntryView: View {
                         .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .widgetURL(URL(string: "dimeapp://budget?budget=\(entry.budget.name)"))
+                    .widgetURL(URL(string: "nickelapp://budget?budget=\(entry.budget.name)"))
                     .containerBackground(for: .widget) { Color.clear }
                 }
             } else {
@@ -315,7 +315,7 @@ struct LockBudgetWidgetEntryView: View {
                         .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .widgetURL(URL(string: "dimeapp://budget?budget=\(entry.budget.name)"))
+                    .widgetURL(URL(string: "nickelapp://budget?budget=\(entry.budget.name)"))
                 }
             }
 

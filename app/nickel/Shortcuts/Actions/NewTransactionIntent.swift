@@ -1,6 +1,6 @@
 //
 //  NewTransactionIntent.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 23/7/23.
 //

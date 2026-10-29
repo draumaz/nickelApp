@@ -1,6 +1,6 @@
 //
 //  WelcomeSheetView.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 22/8/22.
 //
@@ -43,7 +43,7 @@ struct WelcomeSheetView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
                         .padding(.bottom, 20)
 
-                    Text("dime_name")
+                    Text("app_name")
                         .font(.system(size: 30, weight: .medium, design: .rounded))
                         .foregroundColor(Color.PrimaryText)
 

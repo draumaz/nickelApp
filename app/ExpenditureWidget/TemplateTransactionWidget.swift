@@ -170,7 +170,7 @@
 //
 //            }
 //            .padding(0.5)
-//            .widgetURL(URL(string: "dimeapp://newExpense"))
+//            .widgetURL(URL(string: "nickelapp://newExpense"))
 //        }
 //
 //    }

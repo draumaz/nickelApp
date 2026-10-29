@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 24/10/23.
 //

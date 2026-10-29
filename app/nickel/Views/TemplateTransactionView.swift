@@ -1,6 +1,6 @@
 //
 //  TemplateTransactionView.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 4/9/23.
 //

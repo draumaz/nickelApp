@@ -1,6 +1,6 @@
 //
 //  ShortcutsProvider.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 5/8/23.
 //
@@ -9,7 +9,7 @@ import AppIntents
 import Foundation
 
 @available(iOS 16.4, *)
-struct DimeShortcuts: AppShortcutsProvider {
+struct NickelShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: NewTransactionIntent(),

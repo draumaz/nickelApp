@@ -1,6 +1,6 @@
 //
 //  SceneDelegate~.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 24/8/22.
 //

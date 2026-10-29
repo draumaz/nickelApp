@@ -1,6 +1,6 @@
 //
 //  BottomSheet.swift
-//  dime
+//  nickel
 //
 //  Created by Rafael Soh on 1/7/23.
 //
