@@ -497,7 +497,7 @@ public struct AlertToastModifier: ViewModifier {
 
     private var screen: CGRect {
         #if os(iOS)
-            return UIScreen.main.bounds
+            return UIScreen.currentBounds
         #else
             return NSScreen.main?.frame ?? .zero
         #endif
@@ -752,13 +752,9 @@ public extension View {
         modifier(TextForegroundModifier(color: color))
     }
 
-    @ViewBuilder fileprivate func valueChanged<T: Equatable>(value: T, onChange: @escaping (T) -> Void) -> some View {
-        if #available(iOS 14.0, *) {
-            self.onChange(of: value, perform: onChange)
-        } else {
-            onReceive(Just(value)) { value in
-                onChange(value)
-            }
+    fileprivate func valueChanged<T: Equatable>(value: T, onChange: @escaping (T) -> Void) -> some View {
+        self.onChange(of: value) { _, newValue in
+            onChange(newValue)
         }
     }
 }

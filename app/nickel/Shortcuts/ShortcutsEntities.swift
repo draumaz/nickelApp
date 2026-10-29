@@ -121,7 +121,6 @@ import Foundation
 //    }
 // }
 
-@available(iOS 16, *)
 struct IncomeCategoryEntity: AppEntity, Identifiable {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Category")
     typealias DefaultQueryType = IncomeCategoryQuery
@@ -150,7 +149,6 @@ struct IncomeCategoryEntity: AppEntity, Identifiable {
     }
 }
 
-@available(iOS 16, *)
 struct IncomeCategoryQuery: EntityStringQuery {
     func entities(matching query: String) async throws -> [IncomeCategoryEntity] {
         let dataController = DataController.shared
@@ -197,7 +195,6 @@ struct IncomeCategoryQuery: EntityStringQuery {
     }
 }
 
-@available(iOS 16, *)
 struct ExpenseCategoryEntity: AppEntity, Identifiable {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Category")
     typealias DefaultQueryType = ExpenseCategoryQuery
@@ -226,7 +223,6 @@ struct ExpenseCategoryEntity: AppEntity, Identifiable {
     }
 }
 
-@available(iOS 16, *)
 struct ExpenseCategoryQuery: EntityStringQuery {
     func entities(matching query: String) async throws -> [ExpenseCategoryEntity] {
         let dataController = DataController.shared
@@ -272,7 +268,6 @@ struct ExpenseCategoryQuery: EntityStringQuery {
     }
 }
 
-@available(iOS 16, *)
 struct BudgetEntity: AppEntity, Identifiable {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Budget")
     typealias DefaultQueryType = BudgetQuery
@@ -297,7 +292,6 @@ struct BudgetEntity: AppEntity, Identifiable {
     }
 }
 
-@available(iOS 16, *)
 struct BudgetQuery: EntityStringQuery {
     func entities(matching query: String) async throws -> [BudgetEntity] {
         let dataController = DataController.shared

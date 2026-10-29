@@ -10,7 +10,6 @@ import Foundation
 import SwiftUI
 import WidgetKit
 
-@available(iOS 16, *)
 enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
     case notFound,
          coreDataSave,
@@ -463,7 +462,6 @@ class DataController: ObservableObject {
 //        return Array(Set(notes))
     }
 
-    @available(iOS 16, *)
     func findCategory(withId id: UUID) throws -> Category {
         let request: NSFetchRequest<Category> = Category.fetchRequest()
         request.fetchLimit = 1
@@ -485,7 +483,6 @@ class DataController: ObservableObject {
         return results(for: request)
     }
 
-    @available(iOS 16, *)
     func findBudget(withId id: UUID) throws -> Budget {
         let request: NSFetchRequest<Budget> = Budget.fetchRequest()
         request.fetchLimit = 1
@@ -974,24 +971,22 @@ class DataController: ObservableObject {
             let lastWeek = Calendar.current.date(byAdding: .day, value: -7, to: today)!
             var changingDate = Calendar.current.date(byAdding: .second, value: 86399, to: lastWeek)!
 
-            for transaction in transactions {
-                if transaction.wrappedDate > lastWeek {
-                    if transaction.wrappedDate < changingDate {
-                        totalForDay += transaction.wrappedAmount
-                    } else {
-                        let newData = LineGraphDataPoint(date: changingDate, amount: totalForDay)
-                        holdingDataPoints.append(newData)
+            for transaction in transactions where transaction.wrappedDate > lastWeek {
+                if transaction.wrappedDate < changingDate {
+                    totalForDay += transaction.wrappedAmount
+                } else {
+                    let newData = LineGraphDataPoint(date: changingDate, amount: totalForDay)
+                    holdingDataPoints.append(newData)
+                    changingDate = Calendar.current.date(byAdding: .day, value: 1, to: changingDate)!
+                    totalForDay = 0
+
+                    while transaction.wrappedDate > changingDate {
+                        let anotherNewData = LineGraphDataPoint(date: changingDate, amount: 0)
+                        holdingDataPoints.append(anotherNewData)
                         changingDate = Calendar.current.date(byAdding: .day, value: 1, to: changingDate)!
-                        totalForDay = 0
-
-                        while transaction.wrappedDate > changingDate {
-                            let anotherNewData = LineGraphDataPoint(date: changingDate, amount: 0)
-                            holdingDataPoints.append(anotherNewData)
-                            changingDate = Calendar.current.date(byAdding: .day, value: 1, to: changingDate)!
-                        }
-
-                        totalForDay += transaction.wrappedAmount
                     }
+
+                    totalForDay += transaction.wrappedAmount
                 }
             }
 
@@ -1015,24 +1010,22 @@ class DataController: ObservableObject {
             let lastMonth = Calendar.current.date(byAdding: .month, value: -1, to: today)!
             var changingDate = Calendar.current.date(byAdding: .second, value: 86399, to: lastMonth)!
 
-            for transaction in transactions {
-                if transaction.wrappedDate > lastMonth {
-                    if transaction.wrappedDate < changingDate {
-                        totalForDay += transaction.wrappedAmount
-                    } else {
-                        let newData = LineGraphDataPoint(date: changingDate, amount: totalForDay)
-                        holdingDataPoints.append(newData)
+            for transaction in transactions where transaction.wrappedDate > lastMonth {
+                if transaction.wrappedDate < changingDate {
+                    totalForDay += transaction.wrappedAmount
+                } else {
+                    let newData = LineGraphDataPoint(date: changingDate, amount: totalForDay)
+                    holdingDataPoints.append(newData)
+                    changingDate = Calendar.current.date(byAdding: .day, value: 1, to: changingDate)!
+                    totalForDay = 0
+
+                    while transaction.wrappedDate > changingDate {
+                        let anotherNewData = LineGraphDataPoint(date: changingDate, amount: 0)
+                        holdingDataPoints.append(anotherNewData)
                         changingDate = Calendar.current.date(byAdding: .day, value: 1, to: changingDate)!
-                        totalForDay = 0
-
-                        while transaction.wrappedDate > changingDate {
-                            let anotherNewData = LineGraphDataPoint(date: changingDate, amount: 0)
-                            holdingDataPoints.append(anotherNewData)
-                            changingDate = Calendar.current.date(byAdding: .day, value: 1, to: changingDate)!
-                        }
-
-                        totalForDay += transaction.wrappedAmount
                     }
+
+                    totalForDay += transaction.wrappedAmount
                 }
             }
 
@@ -1058,26 +1051,24 @@ class DataController: ObservableObject {
             let nextMonth = calendar.date(byAdding: .month, value: 1, to: thisMonth)!
             var changingDate = calendar.date(byAdding: .year, value: -1, to: nextMonth)!
 
-            for transaction in transactions {
-                if transaction.wrappedDate > thisMonthLastYear {
-                    if transaction.wrappedDate < changingDate {
-                        totalForDay += transaction.wrappedAmount
-                    } else {
-                        let dataDate = calendar.date(byAdding: .day, value: -1, to: changingDate)!
-                        let newData = LineGraphDataPoint(date: dataDate, amount: totalForDay)
-                        holdingDataPoints.append(newData)
+            for transaction in transactions where transaction.wrappedDate > thisMonthLastYear {
+                if transaction.wrappedDate < changingDate {
+                    totalForDay += transaction.wrappedAmount
+                } else {
+                    let dataDate = calendar.date(byAdding: .day, value: -1, to: changingDate)!
+                    let newData = LineGraphDataPoint(date: dataDate, amount: totalForDay)
+                    holdingDataPoints.append(newData)
+                    changingDate = Calendar.current.date(byAdding: .month, value: 1, to: changingDate)!
+                    totalForDay = 0
+
+                    while transaction.wrappedDate > changingDate {
+                        let newDataDate = calendar.date(byAdding: .day, value: -1, to: changingDate)!
+                        let anotherNewData = LineGraphDataPoint(date: newDataDate, amount: 0)
+                        holdingDataPoints.append(anotherNewData)
                         changingDate = Calendar.current.date(byAdding: .month, value: 1, to: changingDate)!
-                        totalForDay = 0
-
-                        while transaction.wrappedDate > changingDate {
-                            let newDataDate = calendar.date(byAdding: .day, value: -1, to: changingDate)!
-                            let anotherNewData = LineGraphDataPoint(date: newDataDate, amount: 0)
-                            holdingDataPoints.append(anotherNewData)
-                            changingDate = Calendar.current.date(byAdding: .month, value: 1, to: changingDate)!
-                        }
-
-                        totalForDay += transaction.wrappedAmount
                     }
+
+                    totalForDay += transaction.wrappedAmount
                 }
             }
 

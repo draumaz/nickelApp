@@ -269,7 +269,7 @@ struct ImportDataView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                .frame(height: UIScreen.main.bounds.size.height / (dynamicTypeSize > .xLarge ? 5.3 : 5.8), alignment: .top)
+                .frame(height: UIScreen.currentBounds.size.height / (dynamicTypeSize > .xLarge ? 5.3 : 5.8), alignment: .top)
                 .padding(.bottom, 10)
 
                 if progress == 1 {
@@ -297,7 +297,7 @@ struct ImportDataView: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 0) {
                                 VStack(spacing: 0) {
-                                    ForEach(0 ..< (numberOfRows + 1)) { number in
+                                    ForEach(0 ..< (numberOfRows + 1), id: \.self) { number in
                                         if number == 0 {
                                             Rectangle()
                                                 .fill(Color.PrimaryBackground)
@@ -446,7 +446,7 @@ struct ImportDataView: View {
                         .padding(.horizontal, 14)
                         .frame(width: 300, height: 48)
                         .background(.fill.tertiary, in: .rect(cornerRadius: 16))
-                        .onChange(of: dateFormatString) { newValue in
+                        .onChange(of: dateFormatString) { _, newValue in
                             let dateFormatter = DateFormatter()
                             dateFormatter.dateFormat = newValue
 
@@ -610,14 +610,14 @@ struct ImportDataView: View {
             }
         }
         .animation(.easeOut(duration: 0.2), value: showToast)
-        .onChange(of: showToast) { newValue in
+        .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
                 }
             }
         }
-        .onChange(of: processingState) { newValue in
+        .onChange(of: processingState) { _, newValue in
             if newValue == .success {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
@@ -628,14 +628,7 @@ struct ImportDataView: View {
     }
 
     func validateDoubles(strings: [String]) -> Bool {
-        for string in strings {
-            if let _ = Double(string) {
-                // Valid double
-            } else {
-                return false // Invalid double found
-            }
-        }
-        return true // All strings are valid doubles
+        strings.allSatisfy { Double($0) != nil }
     }
 
     func processCSV() {
@@ -822,7 +815,7 @@ struct ImportDataView: View {
 
         for dateFormat in dateFormats {
             dateFormatter.dateFormat = dateFormat
-            if let _ = dateFormatter.date(from: dateString) {
+            if dateFormatter.date(from: dateString) != nil {
                 return dateFormat
             }
         }

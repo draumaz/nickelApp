@@ -5,6 +5,8 @@
 //  Created by Rafael Soh on 22/8/22.
 //
 
+import Combine
+import CoreData
 import Foundation
 import SwiftUI
 
@@ -52,7 +54,7 @@ struct WelcomeSheetView: View {
                         .foregroundColor(Color.SubtitleText)
                         .padding(.bottom, 15)
                 }
-                .frame(height: UIScreen.main.bounds.height / 3.4, alignment: .bottom)
+                .frame(height: UIScreen.currentBounds.height / 3.4, alignment: .bottom)
                 .frame(maxWidth: .infinity, alignment: .center)
 
                 VStack(alignment: .leading, spacing: 22) {

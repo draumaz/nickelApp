@@ -6,6 +6,7 @@
 //
 
 import Combine
+import CoreData
 import Foundation
 import Popovers
 import SwiftUI
@@ -126,9 +127,9 @@ struct TransactionView: View {
         let screenWidth: CGFloat
 
         if boldText {
-            screenWidth = (UIScreen.main.bounds.width - 200)
+            screenWidth = (UIScreen.currentBounds.width - 200)
         } else {
-            screenWidth = (UIScreen.main.bounds.width - 150)
+            screenWidth = (UIScreen.currentBounds.width - 150)
         }
 
         if (dateSize.width + categorySize.width + timeSize.width) > screenWidth {
@@ -497,15 +498,10 @@ struct TransactionView: View {
                                 if date < Date.now {
                                     Image(systemName: "calendar")
                                 } else {
-                                    if #available(iOS 17.0, *) {
-                                        Image(systemName: "rays")
-                                            .symbolEffect(
-                                                .variableColor.iterative.dimInactiveLayers.nonReversing,
-                                                options: .repeating, value: animateIcon)
-                                    } else {
-                                        Image(systemName: "slowmo")
-                                            .foregroundColor(Color.SubtitleText)
-                                    }
+                                    Image(systemName: "rays")
+                                        .symbolEffect(
+                                            .variableColor.iterative.dimInactiveLayers.nonReversing,
+                                            options: .repeating, value: animateIcon)
                                 }
                             }
                             .foregroundColor(Color.SubtitleText)
@@ -631,16 +627,11 @@ struct TransactionView: View {
     //                                    }
                                     } else {
                                         HStack(spacing: 5.5) {
-                                            if #available(iOS 17.0, *) {
-                                                Image(systemName: "circle.grid.2x2")
-                                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                                    .symbolEffect(
-                                                        .bounce.up.byLayer, options: .repeating.speed(0.5),
-                                                        value: showCategoryPicker)
-                                            } else {
-                                                Image(systemName: "circle.grid.2x2")
-                                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                            }
+                                            Image(systemName: "circle.grid.2x2")
+                                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                                .symbolEffect(
+                                                    .bounce.up.byLayer, options: .repeating.speed(0.5),
+                                                    value: showCategoryPicker)
 
                                             Text("Category")
                                                 .font(.system(.body, design: .rounded).weight(.semibold))
@@ -838,7 +829,7 @@ struct TransactionView: View {
                         .padding(.vertical, 8)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 13))
                         .padding(17)
-                        .onChange(of: dateString) { _ in
+                        .onChange(of: dateString) {
 
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                 showingDatePicker = false
@@ -864,18 +855,18 @@ struct TransactionView: View {
         .frame(maxHeight: .infinity)
         .background(Color.PrimaryBackground)
         .edgesIgnoringSafeArea(.all)
-        .onChange(of: showToast) { newValue in
+        .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
                 }
             }
         }
-        .onChange(of: income) { _ in
+        .onChange(of: income) {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             category = nil
         }
-        .onChange(of: isDragging) { _ in
+        .onChange(of: isDragging) {
             if !isDragging {
                 if income {
                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -910,17 +901,12 @@ struct TransactionView: View {
             CategoryView(mode: .transaction, income: income)
         }
         .sheet(isPresented: $showPicker) {
-            if #available(iOS 16.0, *) {
-                CustomRecurringView(
-                    repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker
-                )
-                .presentationDetents([.height(230)])
-            } else {
-                CustomRecurringView(
-                    repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
-            }
+            CustomRecurringView(
+                repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker
+            )
+            .presentationDetents([.height(230)])
         }
-        .onChange(of: dynamicTypeSize) { _ in
+        .onChange(of: dynamicTypeSize) {
             if income {
                 swipingOffset = capsuleWidth
             }
@@ -1436,7 +1422,7 @@ struct NoteView: View {
             .font(.system(.body, design: .rounded).weight(.semibold))
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             //            .font(.system(size: 16, weight: .semibold, design: .rounded))
-            .frame(width: min(noteWidth, UIScreen.main.bounds.width / 1.5), alignment: .center)
+            .frame(width: min(noteWidth, UIScreen.currentBounds.width / 1.5), alignment: .center)
         }
         .onTapGesture {
             textFocused = true
@@ -1447,7 +1433,7 @@ struct NoteView: View {
             RoundedRectangle(cornerRadius: 11.5, style: .continuous)
                 .stroke(Color.Outline, lineWidth: 1.5)
         )
-        .onChange(of: textFocused) { newValue in
+        .onChange(of: textFocused) { _, newValue in
             focused = newValue
         }
     }
@@ -1586,7 +1572,7 @@ struct RecurringPickerView: View {
                     showPicker = true
                 }
             }
-            .onChange(of: showPicker) { newValue in
+            .onChange(of: showPicker) { _, newValue in
                 // holdingType != repeatType || holdingCoefficient != repeatCoefficient
                 if !newValue {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {

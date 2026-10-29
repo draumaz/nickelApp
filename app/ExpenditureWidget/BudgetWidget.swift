@@ -53,11 +53,9 @@ struct BudgetWidgetProvider: IntentTimelineProvider {
 //        let dataController = DataController()
         let dataController = DataController.shared
 
-        if let objectIDURL = URL(string: budgetId) {
-            let managedObjectID = dataController.container.persistentStoreCoordinator.managedObjectID(forURIRepresentation: objectIDURL)!
-
-            let budget = dataController.container.viewContext.object(with: managedObjectID) as! Budget
-
+        if let objectIDURL = URL(string: budgetId),
+           let managedObjectID = dataController.container.persistentStoreCoordinator.managedObjectID(forURIRepresentation: objectIDURL),
+           let budget = dataController.container.viewContext.object(with: managedObjectID) as? Budget {
             let fetchRequest = dataController.fetchRequestForBudgetTransactions(budget: budget)
 
             let transactions = dataController.results(for: fetchRequest)
@@ -151,232 +149,119 @@ struct BudgetWidgetEntryView: View {
 
     var body: some View {
         if entry.configuration.budget == nil {
-            if #available(iOS 17.0, *) {
-                Text("Select budget in widget options")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.SubtitleText)
-                    .padding(15)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .containerBackground(for: .widget) {
-                        Color.PrimaryBackground
-                    }
-            } else {
-                Text("Select budget in widget options")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.SubtitleText)
-                    .padding(15)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.PrimaryBackground)
-            }
-
-        } else if entry.budget.emoji == "failed" {
-            if #available(iOS 17.0, *) {
-                Text("Budget no longer exists - please select new budget from widget options.")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.SubtitleText)
-                    .padding(15)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .containerBackground(for: .widget) {
-                        Color.PrimaryBackground
-                    }
-            } else {
-                Text("Budget no longer exists - please select new budget from widget options.")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.SubtitleText)
-                    .padding(15)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.PrimaryBackground)
-            }
-
-        } else {
-            if #available(iOS 17.0, *) {
-                VStack(spacing: 12) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 2.4) {
-                            HStack(spacing: 5) {
-                                Text(entry.budget.emoji)
-                                    .font(.system(size: 9))
-                                Text(entry.budget.name.uppercased())
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                    .lineLimit(1)
-                            }
-                            .foregroundColor(Color.PrimaryText)
-
-                            Text("SPENT: \(percentString1)")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
-                        }
-
-                        Spacer()
-
-                        RingView(percent: entry.percentageOfDays, width: 2.4, topStroke: Color.DarkBackground, bottomStroke: Color.SecondaryBackground)
-                            .frame(width: 13, height: 13)
-                            .padding(3)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    GeometryReader { proxy in
-                        VStack(spacing: 6) {
-                            ZStack(alignment: .bottom) {
-                                ZStack {
-                                    DonutSemicircle(percent: 1, cornerRadius: 4, width: 15)
-                                        .fill(Color.SecondaryBackground)
-                                        .frame(width: proxy.size.width, height: proxy.size.width / 2)
-
-                                    if entry.totalSpent / entry.budget.budgetAmount < 0.97 {
-                                        DonutSemicircle(percent: 1 - (entry.totalSpent / entry.budget.budgetAmount), cornerRadius: 4, width: 15)
-                                            .fill(Color(hex: entry.budget.colour))
-                                            .frame(width: proxy.size.width, height: proxy.size.width / 2)
-                                    }
-                                }
-                                .frame(width: proxy.size.width)
-
-                                VStack(spacing: -4) {
-                                    WidgetBudgetDollarView(amount: difference, red: entry.totalSpent >= entry.budget.budgetAmount)
-                                        .frame(width: proxy.size.width - 50)
-
-                                    if showTimeFrame(size: proxy.size.width - 50) {
-                                        Text(systemSmallWidgetText)
-                                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-                                    } else {
-                                        if entry.budget.budgetAmount >= entry.totalSpent {
-                                            Text("left")
-                                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                        } else {
-                                            Text("over")
-                                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                        }
-                                    }
-                                }
-                            }
-                            .frame(width: proxy.size.width)
-
-                            HStack {
-                                if entry.totalSpent > 999.99 || entry.budget.budgetAmount > 999.99 {
-                                    Text("\(Int(round(entry.totalSpent)))")
-                                        .frame(width: 50, alignment: .leading)
-                                    Spacer()
-                                    Text("\(Int(round(entry.budget.budgetAmount)))")
-                                        .frame(width: 50, alignment: .trailing)
-                                } else {
-                                    Text("\(entry.totalSpent, specifier: "%.2f")")
-                                        .frame(width: 50, alignment: .leading)
-                                    Spacer()
-                                    Text("\(entry.budget.budgetAmount, specifier: "%.2f")")
-                                        .frame(width: 50, alignment: .trailing)
-                                }
-                            }
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-                        }
-                        .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
-                    }
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                }
+            Text("Select budget in widget options")
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .multilineTextAlignment(.center)
+                .foregroundColor(Color.SubtitleText)
+                .padding(15)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .containerBackground(for: .widget) {
                     Color.PrimaryBackground
                 }
-                .widgetURL(URL(string: "nickelapp://budget?budget=\(entry.budget.name)"))
-            } else {
-                VStack(spacing: 12) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 2.4) {
-                            HStack(spacing: 5) {
-                                Text(entry.budget.emoji)
-                                    .font(.system(size: 9))
-                                Text(entry.budget.name.uppercased())
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                    .lineLimit(1)
-                            }
-                            .foregroundColor(Color.PrimaryText)
 
-                            Text("SPENT: \(percentString1)")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
+        } else if entry.budget.emoji == "failed" {
+            Text("Budget no longer exists - please select new budget from widget options.")
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .multilineTextAlignment(.center)
+                .foregroundColor(Color.SubtitleText)
+                .padding(15)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .containerBackground(for: .widget) {
+                    Color.PrimaryBackground
+                }
+
+        } else {
+            VStack(spacing: 12) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 2.4) {
+                        HStack(spacing: 5) {
+                            Text(entry.budget.emoji)
+                                .font(.system(size: 9))
+                            Text(entry.budget.name.uppercased())
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .lineLimit(1)
                         }
+                        .foregroundColor(Color.PrimaryText)
 
-                        Spacer()
-
-                        RingView(percent: entry.percentageOfDays, width: 2.4, topStroke: Color.DarkBackground, bottomStroke: Color.SecondaryBackground)
-                            .frame(width: 13, height: 13)
-                            .padding(3)
+                        Text("SPENT: \(percentString1)")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundColor(Color.SubtitleText)
                     }
-                    .frame(maxWidth: .infinity)
 
-                    GeometryReader { proxy in
-                        VStack(spacing: 6) {
-                            ZStack(alignment: .bottom) {
-                                ZStack {
-                                    DonutSemicircle(percent: 1, cornerRadius: 4, width: 15)
-                                        .fill(Color.SecondaryBackground)
+                    Spacer()
+
+                    RingView(percent: entry.percentageOfDays, width: 2.4, topStroke: Color.DarkBackground, bottomStroke: Color.SecondaryBackground)
+                        .frame(width: 13, height: 13)
+                        .padding(3)
+                }
+                .frame(maxWidth: .infinity)
+
+                GeometryReader { proxy in
+                    VStack(spacing: 6) {
+                        ZStack(alignment: .bottom) {
+                            ZStack {
+                                DonutSemicircle(percent: 1, cornerRadius: 4, width: 15)
+                                    .fill(Color.SecondaryBackground)
+                                    .frame(width: proxy.size.width, height: proxy.size.width / 2)
+
+                                if entry.totalSpent / entry.budget.budgetAmount < 0.97 {
+                                    DonutSemicircle(percent: 1 - (entry.totalSpent / entry.budget.budgetAmount), cornerRadius: 4, width: 15)
+                                        .fill(Color(hex: entry.budget.colour))
                                         .frame(width: proxy.size.width, height: proxy.size.width / 2)
-
-                                    if entry.totalSpent / entry.budget.budgetAmount < 0.97 {
-                                        DonutSemicircle(percent: 1 - (entry.totalSpent / entry.budget.budgetAmount), cornerRadius: 4, width: 15)
-                                            .fill(Color(hex: entry.budget.colour))
-                                            .frame(width: proxy.size.width, height: proxy.size.width / 2)
-                                    }
-                                }
-                                .frame(width: proxy.size.width)
-
-                                VStack(spacing: -4) {
-                                    WidgetBudgetDollarView(amount: difference, red: entry.totalSpent >= entry.budget.budgetAmount)
-                                        .frame(width: proxy.size.width - 50)
-
-                                    if showTimeFrame(size: proxy.size.width - 50) {
-                                        Text(systemSmallWidgetText)
-                                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-                                    } else {
-                                        if entry.budget.budgetAmount >= entry.totalSpent {
-                                            Text("left")
-                                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                        } else {
-                                            Text("over")
-                                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                        }
-                                    }
                                 }
                             }
                             .frame(width: proxy.size.width)
 
-                            HStack {
-                                if entry.totalSpent > 999.99 || entry.budget.budgetAmount > 999.99 {
-                                    Text("\(Int(round(entry.totalSpent)))")
-                                        .frame(width: 50, alignment: .leading)
-                                    Spacer()
-                                    Text("\(Int(round(entry.budget.budgetAmount)))")
-                                        .frame(width: 50, alignment: .trailing)
+                            VStack(spacing: -4) {
+                                WidgetBudgetDollarView(amount: difference, red: entry.totalSpent >= entry.budget.budgetAmount)
+                                    .frame(width: proxy.size.width - 50)
+
+                                if showTimeFrame(size: proxy.size.width - 50) {
+                                    Text(systemSmallWidgetText)
+                                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                                        .foregroundColor(Color.SubtitleText)
                                 } else {
-                                    Text("\(entry.totalSpent, specifier: "%.2f")")
-                                        .frame(width: 50, alignment: .leading)
-                                    Spacer()
-                                    Text("\(entry.budget.budgetAmount, specifier: "%.2f")")
-                                        .frame(width: 50, alignment: .trailing)
+                                    if entry.budget.budgetAmount >= entry.totalSpent {
+                                        Text("left")
+                                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                                            .foregroundColor(Color.SubtitleText)
+                                    } else {
+                                        Text("over")
+                                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                                            .foregroundColor(Color.SubtitleText)
+                                    }
                                 }
                             }
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
                         }
-                        .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
+                        .frame(width: proxy.size.width)
+
+                        HStack {
+                            if entry.totalSpent > 999.99 || entry.budget.budgetAmount > 999.99 {
+                                Text("\(Int(round(entry.totalSpent)))")
+                                    .frame(width: 50, alignment: .leading)
+                                Spacer()
+                                Text("\(Int(round(entry.budget.budgetAmount)))")
+                                    .frame(width: 50, alignment: .trailing)
+                            } else {
+                                Text("\(entry.totalSpent, specifier: "%.2f")")
+                                    .frame(width: 50, alignment: .leading)
+                                Spacer()
+                                Text("\(entry.budget.budgetAmount, specifier: "%.2f")")
+                                    .frame(width: 50, alignment: .trailing)
+                            }
+                        }
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundColor(Color.SubtitleText)
                     }
-                    .frame(maxHeight: .infinity, alignment: .bottom)
+                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
                 }
-                .padding(15)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.PrimaryBackground)
-                .widgetURL(URL(string: "nickelapp://budget?budget=\(entry.budget.name)"))
+                .frame(maxHeight: .infinity, alignment: .bottom)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .containerBackground(for: .widget) {
+                Color.PrimaryBackground
+            }
+            .widgetURL(URL(string: "nickelapp://budget?budget=\(entry.budget.name)"))
         }
     }
 }
@@ -395,13 +280,14 @@ struct WidgetBudgetDollarView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
             Group {
-                Text(currencySymbol)
+                let symbolText = Text(currencySymbol)
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText) +
-
-                Text("\(amount, specifier: showCents && amount < 100  ? "%.2f" : "%.0f")")
+                    .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText)
+                let amountText = Text("\(amount, specifier: showCents && amount < 100  ? "%.2f" : "%.0f")")
                     .font(.system(.title3, design: .rounded).weight(.medium))
                     .foregroundColor(red ? Color("BudgetRed") : Color.PrimaryText)
+
+                Text("\(symbolText)\(amountText)")
             }
 
         }

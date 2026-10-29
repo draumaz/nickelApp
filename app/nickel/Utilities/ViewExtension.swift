@@ -37,7 +37,7 @@ extension HorizontalAlignment {
     static let moneySubtitle = HorizontalAlignment(MoneySubtitle.self)
 }
 
-extension UINavigationController: UIGestureRecognizerDelegate {
+extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
     override open func viewDidLoad() {
         super.viewDidLoad()
         interactivePopGestureRecognizer?.delegate = self
@@ -45,6 +45,15 @@ extension UINavigationController: UIGestureRecognizerDelegate {
 
     public func gestureRecognizerShouldBegin(_: UIGestureRecognizer) -> Bool {
         return viewControllers.count > 1
+    }
+}
+
+extension UIScreen {
+    /// Bounds of the screen hosting the app's window scene, replacing the deprecated `UIScreen.main.bounds`.
+    @MainActor static var currentBounds: CGRect {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
+        return scene?.screen.bounds ?? .zero
     }
 }
 

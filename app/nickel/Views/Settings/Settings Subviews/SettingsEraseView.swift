@@ -71,9 +71,7 @@ struct DeleteAllAlert: View {
 
   var longPress: some Gesture {
     LongPressGesture(minimumDuration: 2)
-      .updating($isDetectingLongPress) {
-        currentState, gestureState,
-        _ in
+      .updating($isDetectingLongPress) { currentState, gestureState, _ in
         gestureState = currentState
       }
       .onEnded { finished in
@@ -140,7 +138,7 @@ struct DeleteAllAlert: View {
               self.completedLongPress.toggle()
             }
         )
-        .onChange(of: completedLongPress) { _ in
+        .onChange(of: completedLongPress) {
           if completedLongPress {
             let impactMed = UIImpactFeedbackGenerator(style: .heavy)
             impactMed.impactOccurred()

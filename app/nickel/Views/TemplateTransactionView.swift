@@ -6,6 +6,7 @@
 //
 
 import Combine
+import CoreData
 import Foundation
 import Popovers
 import SwiftUI
@@ -57,7 +58,7 @@ struct TemplateTransactionView: View {
                 return "0"
             }
             for i in numbers1 {
-                string = string + i
+                string += i
             }
 
             return string
@@ -111,7 +112,7 @@ struct TemplateTransactionView: View {
 
     var downsize: (big: CGFloat, small: CGFloat) {
         let amountText: String
-        let size = UIScreen.main.bounds.width - 105
+        let size = UIScreen.currentBounds.width - 105
 
         if numberEntryType == 2 {
             amountText = amount
@@ -423,15 +424,10 @@ struct TemplateTransactionView: View {
                                 submit()
                             } label: {
                                 Group {
-                                    if #available(iOS 17.0, *) {
-                                        Image(systemName: "checkmark.square.fill")
-                                            .font(.system(size: 30, weight: .medium, design: .rounded))
-                                            .symbolEffect(.bounce.up.byLayer, value: transactionValue != 0 && category != nil)
+                                    Image(systemName: "checkmark.square.fill")
+                                        .font(.system(size: 30, weight: .medium, design: .rounded))
+                                        .symbolEffect(.bounce.up.byLayer, value: transactionValue != 0 && category != nil)
 //                                            .symbolEffectsRemoved()
-                                    } else {
-                                        Image(systemName: "checkmark.square.fill")
-                                            .font(.system(size: 30, weight: .medium, design: .rounded))
-                                    }
                                 }
                                 .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
                                 .foregroundColor(Color.LightIcon)
@@ -544,7 +540,7 @@ struct TemplateTransactionView: View {
         .frame(maxHeight: .infinity)
         .background(Color.PrimaryBackground)
         .edgesIgnoringSafeArea(.all)
-        .onChange(of: showToast) { newValue in
+        .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
@@ -575,12 +571,8 @@ struct TemplateTransactionView: View {
             CategoryView(mode: .transaction, income: income)
         }
         .sheet(isPresented: $showPicker) {
-            if #available(iOS 16.0, *) {
-                CustomRecurringView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
-                    .presentationDetents([.height(230)])
-            } else {
-                CustomRecurringView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
-            }
+            CustomRecurringView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
+                .presentationDetents([.height(230)])
         }
     }
 
@@ -813,7 +805,7 @@ struct CategoryRowPickerView: View {
                                         }
                                     }
                                 }
-                                .onChange(of: income) { newValue in
+                                .onChange(of: income) { _, newValue in
                                     if newValue {
                                         if let firstCategory = incomeCategories.first {
                                             value.scrollTo(firstCategory.id, anchor: .leading)

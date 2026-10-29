@@ -5,9 +5,10 @@
 //  Created by Rafael Soh on 20/5/22.
 //
 
+import CoreData
 import Foundation
-import SwiftUIIntrospect
 import SwiftUI
+import SwiftUIIntrospect
 
 struct InsightsView: View {
     @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
@@ -565,7 +566,7 @@ struct SingleGraphView: View {
     @Binding var selectedDate: Date?
 
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var incomeTracking: Bool = true
-    let language = Locale.current.languageCode
+    let language = Locale.current.language.languageCode?.identifier
 
     var selectedDateString: String {
         if let unwrappedDate = selectedDate {
@@ -715,7 +716,7 @@ struct SingleGraphView: View {
         let averageWidth = supplementalText.widthOfRoundedString(size: UIFont.textStyleSize(.title1), weight: .medium)
         let percentageWidth = percentageDifference.widthOfRoundedString(size: UIFont.textStyleSize(.footnote), weight: .medium) + 10
 
-        let screenWidth = UIScreen.main.bounds.width - 60
+        let screenWidth = UIScreen.currentBounds.width - 60
 
         return totalWidth + averageWidth + percentageWidth + 40 < screenWidth
     }
@@ -970,9 +971,9 @@ struct WeekGraphView: View {
     @State private var changeDate: Bool = false
     @GestureState var isDragging = false
     var changeTime: Bool {
-        if offset < -(UIScreen.main.bounds.width * 0.25) && showingWeek != startOfCurrentWeek {
+        if offset < -(UIScreen.currentBounds.width * 0.25) && showingWeek != startOfCurrentWeek {
             return true
-        } else if offset > (UIScreen.main.bounds.width * 0.25) && showingWeek != startOfLastWeek {
+        } else if offset > (UIScreen.currentBounds.width * 0.25) && showingWeek != startOfLastWeek {
             return true
         } else {
             return false
@@ -1061,7 +1062,7 @@ struct WeekGraphView: View {
                                 if offset < 0, showingWeek != startOfCurrentWeek {
                                     changeDate = true
 
-                                    offset = UIScreen.main.bounds.width
+                                    offset = UIScreen.currentBounds.width
 
                                     showingWeek = Calendar.current.date(byAdding: .day, value: 7, to: showingWeek) ?? Date.now
 
@@ -1071,7 +1072,7 @@ struct WeekGraphView: View {
                                 } else if offset > 0, showingWeek != startOfLastWeek {
                                     changeDate = true
 
-                                    offset = -UIScreen.main.bounds.width
+                                    offset = -UIScreen.currentBounds.width
 
                                     showingWeek = Calendar.current.date(byAdding: .day, value: -7, to: showingWeek) ?? Date.now
 
@@ -1088,12 +1089,12 @@ struct WeekGraphView: View {
                             }
                         }
                 )
-                .onChange(of: changeTime) { _ in
+                .onChange(of: changeTime) {
                     if changeTime {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                 }
-                .onChange(of: isDragging) { _ in
+                .onChange(of: isDragging) {
                     if !isDragging && !changeDate {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             offset = 0
@@ -1101,16 +1102,16 @@ struct WeekGraphView: View {
                     }
                 }
                 .animation(.easeInOut, value: changeTime)
-                .onChange(of: showingWeek) { _ in
+                .onChange(of: showingWeek) {
                     selectedDate = nil
                     categoryFilterMode = false
                     refreshID1 = UUID()
                 }
-                .onChange(of: income) { _ in
+                .onChange(of: income) {
                     selectedDate = nil
                     categoryFilterMode = false
                 }
-                .onChange(of: incomeFiltering) { _ in
+                .onChange(of: incomeFiltering) {
                     selectedDate = nil
                     categoryFilterMode = false
                 }
@@ -1299,7 +1300,7 @@ struct SingleWeekBarGraphView: View {
                 .id(refreshID)
 
         }
-        .onChange(of: selectedDate) { _ in
+        .onChange(of: selectedDate) {
             selectedDateAmount = dayDictionary[selectedDate ?? Date.now] ?? 0.0
             refreshID = UUID()
         }
@@ -1392,9 +1393,9 @@ struct MonthGraphView: View {
     @State private var changeDate: Bool = false
     @GestureState var isDragging = false
     var changeTime: Bool {
-        if offset < -(UIScreen.main.bounds.width * 0.25) && showingMonth != startOfCurrentMonth {
+        if offset < -(UIScreen.currentBounds.width * 0.25) && showingMonth != startOfCurrentMonth {
             return true
-        } else if offset > (UIScreen.main.bounds.width * 0.25) && showingMonth != startOfLastMonth {
+        } else if offset > (UIScreen.currentBounds.width * 0.25) && showingMonth != startOfLastMonth {
             return true
         } else {
             return false
@@ -1483,7 +1484,7 @@ struct MonthGraphView: View {
                                 if offset < 0, showingMonth != startOfCurrentMonth {
                                     changeDate = true
 
-                                    offset = UIScreen.main.bounds.width
+                                    offset = UIScreen.currentBounds.width
 
                                     showingMonth = Calendar.current.date(byAdding: .month, value: 1, to: showingMonth) ?? Date.now
 
@@ -1493,7 +1494,7 @@ struct MonthGraphView: View {
                                 } else if offset > 0, showingMonth != startOfLastMonth {
                                     changeDate = true
 
-                                    offset = -UIScreen.main.bounds.width
+                                    offset = -UIScreen.currentBounds.width
 
                                     showingMonth = Calendar.current.date(byAdding: .month, value: -1, to: showingMonth) ?? Date.now
 
@@ -1510,12 +1511,12 @@ struct MonthGraphView: View {
                             }
                         }
                 )
-                .onChange(of: changeTime) { _ in
+                .onChange(of: changeTime) {
                     if changeTime {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                 }
-                .onChange(of: isDragging) { _ in
+                .onChange(of: isDragging) {
                     if !isDragging && !changeDate {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             offset = 0
@@ -1523,16 +1524,16 @@ struct MonthGraphView: View {
                     }
                 }
                 .animation(.easeInOut, value: changeTime)
-                .onChange(of: showingMonth) { _ in
+                .onChange(of: showingMonth) {
                     selectedDate = nil
                     categoryFilterMode = false
                     refreshID1 = UUID()
                 }
-                .onChange(of: income) { _ in
+                .onChange(of: income) {
                     selectedDate = nil
                     categoryFilterMode = false
                 }
-                .onChange(of: incomeFiltering) { _ in
+                .onChange(of: incomeFiltering) {
                     selectedDate = nil
                     categoryFilterMode = false
                 }
@@ -1692,7 +1693,7 @@ struct SingleMonthBarGraphView: View {
                 .opacity(actualDays <= 1 ? 0 : 1)
 
         }
-        .onChange(of: selectedDate) { _ in
+        .onChange(of: selectedDate) {
             selectedDateAmount = dayDictionary[selectedDate ?? Date.now] ?? 0.0
         }
     }
@@ -1772,9 +1773,9 @@ struct YearGraphView: View {
     @State private var changeDate: Bool = false
     @GestureState var isDragging = false
     var changeTime: Bool {
-        if offset < -(UIScreen.main.bounds.width * 0.25) && showingYear != startOfCurrentYear {
+        if offset < -(UIScreen.currentBounds.width * 0.25) && showingYear != startOfCurrentYear {
             return true
-        } else if offset > (UIScreen.main.bounds.width * 0.25) && showingYear != startOfLastYear {
+        } else if offset > (UIScreen.currentBounds.width * 0.25) && showingYear != startOfLastYear {
             return true
         } else {
             return false
@@ -1863,7 +1864,7 @@ struct YearGraphView: View {
                                 if offset < 0, showingYear != startOfCurrentYear {
                                     changeDate = true
 
-                                    offset = UIScreen.main.bounds.width
+                                    offset = UIScreen.currentBounds.width
 
                                     showingYear = Calendar.current.date(byAdding: .year, value: 1, to: showingYear) ?? Date.now
 
@@ -1873,7 +1874,7 @@ struct YearGraphView: View {
                                 } else if offset > 0, showingYear != startOfLastYear {
                                     changeDate = true
 
-                                    offset = -UIScreen.main.bounds.width
+                                    offset = -UIScreen.currentBounds.width
 
                                     showingYear = Calendar.current.date(byAdding: .year, value: -1, to: showingYear) ?? Date.now
 
@@ -1890,12 +1891,12 @@ struct YearGraphView: View {
                             }
                         }
                 )
-                .onChange(of: changeTime) { _ in
+                .onChange(of: changeTime) {
                     if changeTime {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                 }
-                .onChange(of: isDragging) { _ in
+                .onChange(of: isDragging) {
                     if !isDragging && !changeDate {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             offset = 0
@@ -1903,16 +1904,16 @@ struct YearGraphView: View {
                     }
                 }
                 .animation(.easeInOut, value: changeTime)
-                .onChange(of: showingYear) { _ in
+                .onChange(of: showingYear) {
                     selectedDate = nil
                     categoryFilterMode = false
                     refreshID1 = UUID()
                 }
-                .onChange(of: income) { _ in
+                .onChange(of: income) {
                     selectedDate = nil
                     categoryFilterMode = false
                 }
-                .onChange(of: incomeFiltering) { _ in
+                .onChange(of: incomeFiltering) {
                     selectedDate = nil
                     categoryFilterMode = false
                 }
@@ -2047,7 +2048,7 @@ struct SingleYearBarGraphView: View {
                 .opacity(actualMonths <= 1 ? 0 : 1)
 
         }
-        .onChange(of: selectedDate) { _ in
+        .onChange(of: selectedDate) {
             selectedDateAmount = monthDictionary[selectedDate ?? Date.now] ?? 0.0
         }
     }
@@ -2180,13 +2181,14 @@ struct InsightsDollarView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
             Group {
-                Text(symbol)
+                let symbolText = Text(symbol)
                     .font(.system(.title3, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText) +
-
-                Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
+                    .foregroundColor(Color.SubtitleText)
+                let amountText = Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
                     .font(.system(.title, design: .rounded).weight(.medium))
                     .foregroundColor(Color.PrimaryText)
+
+                Text("\(symbolText)\(amountText)")
             }
         }
         .minimumScaleFactor(0.5)

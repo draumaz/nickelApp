@@ -235,7 +235,7 @@ struct LogView: View {
             .fullScreenCover(isPresented: $searchMode) {
                 SearchView()
             }
-            .onChange(of: syncMonitor.syncStateSummary) { newState in
+            .onChange(of: syncMonitor.syncStateSummary) { _, newState in
                 if newState == .succeeded && !updatedRecurring {
                     dataController.updateRecurringTransactions()
                     updatedRecurring = true
@@ -257,7 +257,7 @@ struct LogView: View {
                     dataController.updateRecurringTransactions()
                 }
             }
-            .onChange(of: launchSearch) { _ in
+            .onChange(of: launchSearch) {
                 searchMode = true
             }
             .onAppear {
@@ -353,13 +353,14 @@ struct NumberView: AnimatableModifier {
     func body(content _: Content) -> some View {
         HStack(alignment: .lastTextBaseline, spacing: 2) {
             Group {
-                Text(netTotal ? (positive ? "+\(currencySymbol)" : "-\(currencySymbol)") : currencySymbol)
+                let symbolText = Text(netTotal ? (positive ? "+\(currencySymbol)" : "-\(currencySymbol)") : currencySymbol)
                     .font(.system(.largeTitle, design: .rounded))
-                    .foregroundColor(Color.SubtitleText) +
-
-                Text("\(number, specifier: showCents  ? "%.2f" : "%.0f")")
+                    .foregroundColor(Color.SubtitleText)
+                let amountText = Text("\(number, specifier: showCents  ? "%.2f" : "%.0f")")
                     .font(.system(size: fontSize, weight: .regular, design: .rounded))
                     .foregroundColor(Color.PrimaryText)
+
+                Text("\(symbolText)\(amountText)")
             }
         }
         .minimumScaleFactor(0.5)
@@ -822,18 +823,16 @@ struct ListView: View {
                 }
                 .contentShape(RoundedRectangle(cornerRadius: 10))
                 .contextMenu {
-                    if #available(iOS 16.0, *) {
-                        Button {
-                            guard let image = ImageRenderer(content: SingleDayPhotoView(amountText: filtered.string, dateText: dateText.uppercased(), transactions: filtered.transactions, showCents: showCents, currencySymbol: currencySymbol, currency: currency, swapTimeLabel: swapTimeLabel, future: false)).uiImage else {
-                                return
-                            }
-
-                            UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-
-                            self.toastPresenter.showToast.toggle()
-                        } label: {
-                            Label("Save as Photo", systemImage: "square.and.arrow.up")
+                    Button {
+                        guard let image = ImageRenderer(content: SingleDayPhotoView(amountText: filtered.string, dateText: dateText.uppercased(), transactions: filtered.transactions, showCents: showCents, currencySymbol: currencySymbol, currency: currency, swapTimeLabel: swapTimeLabel, future: false)).uiImage else {
+                            return
                         }
+
+                        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+
+                        self.toastPresenter.showToast.toggle()
+                    } label: {
+                        Label("Save as Photo", systemImage: "square.and.arrow.up")
                     }
                 }
                 .padding(.bottom, 18)
@@ -1472,7 +1471,7 @@ struct NoResultsView: View {
                 Spacer()
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .frame(height: UIScreen.main.bounds.height * 0.7)
+            .frame(height: UIScreen.currentBounds.height * 0.7)
             .opacity(0.7)
         } else {
             VStack(spacing: 12) {
@@ -1601,7 +1600,7 @@ struct CategoryStepperView: View {
                 categoryFilter = categories[0]
             }
         }
-        .onChange(of: income) { _ in
+        .onChange(of: income) {
             if categories.isEmpty {
                 categoryFilter = nil
             } else {

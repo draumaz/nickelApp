@@ -5,6 +5,7 @@
 //  Created by Rafael Soh on 20/5/22.
 //
 
+import CoreData
 import CrookedText
 import Foundation
 import Popovers
@@ -340,7 +341,7 @@ struct MainBudgetView: View {
 
     var width: CGFloat {
         if soloBudget {
-            return UIScreen.main.bounds.width - 90
+            return UIScreen.currentBounds.width - 90
         } else {
             return 250
         }
@@ -478,11 +479,11 @@ struct SingleBudgetView: View {
     var budgetRows: Bool
 
     var width: CGFloat {
-        ((UIScreen.main.bounds.width - 75) / 2) - 30
+        ((UIScreen.currentBounds.width - 75) / 2) - 30
     }
 
     var rowWidth: CGFloat {
-        (UIScreen.main.bounds.width - 80) / 2
+        (UIScreen.currentBounds.width - 80) / 2
     }
 
     var budgetAmount: Double {
@@ -611,11 +612,11 @@ struct SingleBudgetView: View {
     @State private var deleted: Bool = false
 
     var deletePopup: Bool {
-        return abs(offset) > UIScreen.main.bounds.width * 0.15
+        return abs(offset) > UIScreen.currentBounds.width * 0.15
     }
 
     var deleteConfirm: Bool {
-        return abs(offset) > UIScreen.main.bounds.width * 0.50
+        return abs(offset) > UIScreen.currentBounds.width * 0.50
     }
 
     @GestureState var isDragging = false
@@ -696,12 +697,12 @@ struct SingleBudgetView: View {
                     .offset(x: offset)
                 }
                 .padding(.horizontal, 30)
-                .onChange(of: deletePopup) { _ in
+                .onChange(of: deletePopup) {
                     if deletePopup {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                 }
-                .onChange(of: deleteConfirm) { _ in
+                .onChange(of: deleteConfirm) {
                     if deleteConfirm {
                         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                     }
@@ -720,7 +721,7 @@ struct SingleBudgetView: View {
                             if deleteConfirm {
                                 deleted = true
                                 withAnimation(.easeInOut(duration: 0.3)) {
-                                    offset -= UIScreen.main.bounds.width
+                                    offset -= UIScreen.currentBounds.width
                                 }
 
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -743,7 +744,7 @@ struct SingleBudgetView: View {
                             }
                         }
                 )
-                .onChange(of: isDragging) { _ in
+                .onChange(of: isDragging) {
                     if !isDragging && !deleted {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             offset = 0
@@ -954,13 +955,14 @@ struct BudgetDollarView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
             Group {
-                Text(currencySymbol)
+                let symbolText = Text(currencySymbol)
                     .font(.system(dynamicTypeSizes.symbol, design: .rounded).weight(.medium))
-                    .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText) +
-
-                Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
+                    .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText)
+                let amountText = Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
                     .font(.system(dynamicTypeSizes.amount, design: .rounded).weight(.medium))
                     .foregroundColor(red ? Color("BudgetRed") : Color.PrimaryText)
+
+                Text("\(symbolText)\(amountText)")
             }
         }
         .minimumScaleFactor(0.5)
@@ -980,13 +982,14 @@ struct DetailedBudgetDollarView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
             Group {
-                Text(currencySymbol)
+                let symbolText = Text(currencySymbol)
                     .font(.system(.title2, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText) +
-
-                Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
+                    .foregroundColor(Color.SubtitleText)
+                let amountText = Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
                     .font(.system(.largeTitle, design: .rounded).weight(.medium))
                     .foregroundColor(Color.PrimaryText)
+
+                Text("\(symbolText)\(amountText)")
             }
         }
         .minimumScaleFactor(0.5)
@@ -1008,13 +1011,14 @@ struct DetailedBudgetDifferenceDollarView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
             Group {
-                Text(currencySymbol)
+                let symbolText = Text(currencySymbol)
                     .font(.system(.title2, design: .rounded).weight(.medium))
-                    .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText) +
-
-                Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
+                    .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText)
+                let amountText = Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
                     .font(.system(.largeTitle, design: .rounded).weight(.medium))
                     .foregroundColor(red ? Color("BudgetRed") : Color.PrimaryText)
+
+                Text("\(symbolText)\(amountText)")
             }
         }
         .minimumScaleFactor(0.5)
@@ -1655,7 +1659,7 @@ struct FilteredCategoryDayBudgetView: View {
                 totalSpent = holding
             }
         }
-        .onChange(of: date) { _ in
+        .onChange(of: date) {
             DispatchQueue.main.async {
                 var holding = 0.0
                 transactions.forEach { transaction in
@@ -1734,7 +1738,7 @@ struct FilteredBudgetView: View {
                 totalSpent = holding
             }
         }
-        .onChange(of: date) { _ in
+        .onChange(of: date) {
             DispatchQueue.main.async {
                 var holding = 0.0
                 transactions.forEach { day in

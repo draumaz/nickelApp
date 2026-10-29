@@ -5,6 +5,7 @@
 //  Created by Rafael Soh on 15/7/23.
 //
 
+import CoreData
 import SwiftUI
 
 struct PickerStyle: ViewModifier {
@@ -153,53 +154,29 @@ struct BrandNewBudgetView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                if #available(iOS 17.0, *) {
-                    Button {
-                        if showBackButton {
-                            withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                if progress == 3 && !categoryBudget && !editMode {
-                                    progress -= 2
-                                } else if progress == 5 && budgetTimeFrame == .day {
-                                    progress -= 2
-                                } else if progress > 1 {
-                                    progress -= 1
-                                }
+                Button {
+                    if showBackButton {
+                        withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
+                            if progress == 3 && !categoryBudget && !editMode {
+                                progress -= 2
+                            } else if progress == 5 && budgetTimeFrame == .day {
+                                progress -= 2
+                            } else if progress > 1 {
+                                progress -= 1
                             }
-                        } else {
-                            dismiss()
                         }
-                    } label: {
-                        Image(systemName: showBackButton ? "chevron.left" : "xmark")
-                            .font(.system(.callout, design: .rounded).weight(.semibold))
+                    } else {
+                        dismiss()
+                    }
+                } label: {
+                    Image(systemName: showBackButton ? "chevron.left" : "xmark")
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
 
-                            .foregroundStyle(.primary)
-                            .frame(width: 44, height: 44)
-                            .glassEffect(.regular.interactive(), in: .circle)
-                    }
-                    .contentTransition(.symbolEffect(.replace.downUp.wholeSymbol))
-                } else {
-                    Button {
-                        if showBackButton {
-                            withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                if progress == 3 && !categoryBudget && !editMode {
-                                    progress -= 2
-                                } else if progress == 5 && budgetTimeFrame == .day {
-                                    progress -= 2
-                                } else if progress > 1 {
-                                    progress -= 1
-                                }
-                            }
-                        } else {
-                            dismiss()
-                        }
-                    } label: {
-                        Image(systemName: showBackButton ? "chevron.left" : "xmark")
-                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .frame(width: 44, height: 44)
-                            .glassEffect(.regular.interactive(), in: .circle)
-                    }
+                        .foregroundStyle(.primary)
+                        .frame(width: 44, height: 44)
+                        .glassEffect(.regular.interactive(), in: .circle)
                 }
+                .contentTransition(.symbolEffect(.replace.downUp.wholeSymbol))
 
                 Spacer()
 
@@ -682,15 +659,11 @@ struct BrandNewBudgetView: View {
             }
         }
         .sheet(isPresented: $showingCategoryView) {
-            if #available(iOS 16.0, *) {
-                NewCategoryAlert(income: Binding.constant(false), bottomSpacers: false, budgetMode: true)
-                    .presentationDetents([.height(270)])
-            } else {
-                NewCategoryAlert(income: Binding.constant(false), bottomSpacers: true, budgetMode: true)
-            }
+            NewCategoryAlert(income: Binding.constant(false), bottomSpacers: false, budgetMode: true)
+                .presentationDetents([.height(270)])
         }
         .animation(.easeOut(duration: 0.2), value: showToast)
-        .onChange(of: showToast) { newValue in
+        .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
@@ -815,7 +788,7 @@ struct BrandNewBudgetView: View {
 
         var totalWidth: CGFloat = 0
 
-        let screenWidth: CGFloat = UIScreen.main.bounds.width - 50
+        let screenWidth: CGFloat = UIScreen.currentBounds.width - 50
 
         categories.forEach { category in
 

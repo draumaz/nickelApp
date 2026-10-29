@@ -72,14 +72,9 @@ struct NumberPad: View {
                         submit()
                     } label: {
                         Group {
-                            if #available(iOS 17.0, *) {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: 30, weight: .medium, design: .rounded))
-                                    .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
-                            } else {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: 30, weight: .medium, design: .rounded))
-                            }
+                            Image(systemName: "checkmark.square.fill")
+                                .font(.system(size: 30, weight: .medium, design: .rounded))
+                                .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
                         }
                         .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
                         .foregroundColor(Color.LightIcon)
@@ -161,15 +156,15 @@ struct NumberPad: View {
             price = Double(Int(price / 10))
         } else {
             switch decimalValuesAssigned {
-                case .none:
-                    isEditingDecimal = false
-                    return
-                case .first:
-                    price = Double(Int(price))
-                    decimalValuesAssigned = .none
-                case .second:
-                    price = Double(Int(price * 10)) / 10
-                    decimalValuesAssigned = .first
+            case .none:
+                isEditingDecimal = false
+                return
+            case .first:
+                price = Double(Int(price))
+                decimalValuesAssigned = .none
+            case .second:
+                price = Double(Int(price * 10)) / 10
+                decimalValuesAssigned = .first
             }
         }
     }
@@ -195,14 +190,14 @@ struct NumberPad: View {
             } else {
                 if isEditingDecimal {
                     switch decimalValuesAssigned {
-                        case .none:
-                            price += Double(number) / 10
-                            decimalValuesAssigned = .first
-                        case .first:
-                            price += Double(number) / 100
-                            decimalValuesAssigned = .second
-                        case .second:
-                            return
+                    case .none:
+                        price += Double(number) / 10
+                        decimalValuesAssigned = .first
+                    case .first:
+                        price += Double(number) / 100
+                        decimalValuesAssigned = .second
+                    case .second:
+                        return
                     }
                 } else {
                     price *= 10
@@ -258,12 +253,12 @@ struct NumberPadTextView: View {
         }
         if isEditingDecimal {
             switch decimalValuesAssigned {
-                case .none:
-                    return String(format: "%.0f", price) + "."
-                case .first:
-                    return String(format: "%.1f", price)
-                case .second:
-                    return String(format: "%.2f", price)
+            case .none:
+                return String(format: "%.0f", price) + "."
+            case .first:
+                return String(format: "%.1f", price)
+            case .second:
+                return String(format: "%.2f", price)
             }
         }
         return String(format: "%.0f", price)
@@ -295,7 +290,7 @@ struct NumberPadTextView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 0) {
             Group {
-                Text(currencySymbol)
+                let symbolText = Text(currencySymbol)
                     .font(.system(.largeTitle, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
 
@@ -305,11 +300,11 @@ struct NumberPadTextView: View {
 //                        .foregroundColor(Color.PrimaryText)
 //                        .transition(AnyTransition.opacity.combined(with: .scale).combined(with: .move(edge: .trailing)))
 //                }
-
-                + Text(amount)
+                let amountText = Text(amount)
                     .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
                     .foregroundColor(Color.PrimaryText)
 
+                Text("\(symbolText)\(amountText)")
             }
         }
         .minimumScaleFactor(0.5)
@@ -346,15 +341,15 @@ struct NumberPadTextView: View {
             price = Double(Int(price / 10))
         } else {
             switch decimalValuesAssigned {
-                case .none:
-                    isEditingDecimal = false
-                    return
-                case .first:
-                    price = Double(Int(price))
-                    decimalValuesAssigned = .none
-                case .second:
-                    price = Double(Int(price * 10)) / 10
-                    decimalValuesAssigned = .first
+            case .none:
+                isEditingDecimal = false
+                return
+            case .first:
+                price = Double(Int(price))
+                decimalValuesAssigned = .none
+            case .second:
+                price = Double(Int(price * 10)) / 10
+                decimalValuesAssigned = .first
             }
         }
     }
