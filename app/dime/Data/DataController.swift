@@ -52,12 +52,15 @@ class DataController: ObservableObject {
 //            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.rafaelsoh.dime")
 //        }
 
-        description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.rafaelsoh.dime")
+        // iCloud sync disabled so the app can be signed with a free developer account
+        description.cloudKitContainerOptions = nil
 
         let groupID = "group.com.rafaelsoh.dime"
 
         if let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) {
             description.url = url.appendingPathComponent("Main.sqlite")
+        } else {
+            description.url = NSPersistentContainer.defaultDirectoryURL().appendingPathComponent("Main.sqlite")
         }
 
         container.persistentStoreDescriptions = [description]

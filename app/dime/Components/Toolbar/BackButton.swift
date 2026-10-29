@@ -14,5 +14,6 @@ struct BackButton: View {
         ToolbarButton(systemName: "chevron.left") {
             presentationMode.wrappedValue.dismiss()
         }
+        .accessibilityLabel("Back")
     }
 }

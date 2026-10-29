@@ -84,18 +84,11 @@ struct ImportDataView: View {
     @State var errorMessage = "Invalid dates in date column."
     @State var confettiNumber = 0
 
-    var numberOfLinkedCategories: Int {
-        uniqueCategories.filter { $0.category != nil }.count
-    }
+    /// Number of categories created automatically for CSV values that matched no existing category.
+    @State var createdCategoryCount = 0
 
     @State var showToast = false
     @State var toastMessage: String = "Invalid File"
-
-    @State var showingCategoryView = false
-    @State var pageIndex = 0
-
-    // just for the adding of transactions
-    @State var income = false
 
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
 
@@ -114,7 +107,6 @@ struct ImportDataView: View {
         InstructionHeadings(title: "Assign date column", subtitle: "Select a column from your import that corresponds to the dates of your transactions."),
         InstructionHeadings(title: "Assign amount column", subtitle: "Select a column from your import that corresponds to the values of your transactions."),
         InstructionHeadings(title: "Indicate date format", subtitle: "Referencing this article, state the format of the dates in the assigned column."),
-        InstructionHeadings(title: "Link categories", subtitle: "Match values found in the 'Category' column to the corresponding categories in Dime."),
         InstructionHeadings(title: "Processing import", subtitle: "Please wait while we process your new transactions.")
     ]
 
@@ -127,13 +119,8 @@ struct ImportDataView: View {
 
     let pointers = ["Ensure that the values in the 'Amount' column do not contain any currency symbols.", "All dates should be of a consistent, recognizable format. If no timestamps are provided, the time of transaction will default to 12:00 am.", "Remove all commas in the 'Note' and 'Category' columns as they would disrupt the parsing of your file."]
 
-    var incomeCategories: [Category] {
-        dataController.getAllCategories(income: true)
-    }
-
-    var expenseCategories: [Category] {
-        dataController.getAllCategories(income: false)
-    }
+    /// Total steps before processing begins, for the progress indicator.
+    private let stepCount = 6
 
     var body: some View {
         VStack(spacing: 0) {
@@ -146,105 +133,76 @@ struct ImportDataView: View {
                             .scaleEffect(0.8)
 
                         Text("Processing Import")
-                            .font(.system(.title2, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 22, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-                    case .success:
-
-                        Image(systemName: "checkmark")
                             .font(.system(.title2, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 21, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.IncomeGreen)
-                            .frame(width: 35, height: 35)
-                            .background(Color.IncomeGreen.opacity(0.3), in: Circle())
+                            .foregroundStyle(.secondary)
+                    case .success:
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(Color.IncomeGreen)
+                            .symbolEffect(.bounce, value: processingState)
 
                         Text("Import Successful")
-                            .font(.system(.title2, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 22, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.IncomeGreen)
-                    case .error:
-                        Image(systemName: "x")
                             .font(.system(.title2, design: .rounded).weight(.semibold))
 
-//                            .font(.system(size: 21, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.AlertRed)
-                            .frame(width: 35, height: 35)
-                            .background(Color.Alert.opacity(0.3), in: Circle())
+                        if createdCategoryCount > 0 {
+                            Text("^[\(createdCategoryCount) new category](inflect: true) created")
+                                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
+                    case .error:
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(Color.AlertRed)
+                            .symbolEffect(.bounce, value: processingState)
 
                         Text("Import Failed")
-                            .font(.system(.title2, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 22, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.PrimaryText)
+                            .font(.system(.title2, design: .rounded).weight(.semibold))
 
                         Text(errorMessage)
                             .font(.system(.subheadline, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .frame(maxHeight: .infinity)
             } else {
                 HStack {
-                    if #available(iOS 17.0, *) {
-                        Button {
-                            if progress == 2 {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    progress -= 1
-                                }
-                            } else if progress > 6 {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    progress -= 1
-                                }
-                            } else if progress > 2 {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    if let removedColumn = selectedColumns.popLast() {
-                                        remainingColumns.append(removedColumn)
-                                        remainingColumns.sort()
-                                        selectedColumn = remainingColumns[0]
-                                        columnSelectionCompleted = false
-
-                                        progress -= 1
-                                    }
-                                }
-                            } else {
-                                dismiss()
+                    Button {
+                        if progress == 2 {
+                            withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
+                                progress -= 1
                             }
-                        } label: {
-                            Image(systemName: progress > 1 ? "chevron.left" : "xmark")
-                                .font(.system(.callout, design: .rounded).weight(.semibold))
+                        } else if progress > 2 {
+                            withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
+                                if let removedColumn = selectedColumns.popLast() {
+                                    remainingColumns.append(removedColumn)
+                                    remainingColumns.sort()
+                                    selectedColumn = remainingColumns[0]
+                                    columnSelectionCompleted = false
 
-                                .foregroundColor(Color.SubtitleText)
-                                .padding(8)
-                                .background(Color.SecondaryBackground, in: Circle())
-                        }
-                        .contentTransition(.symbolEffect(.replace.downUp.wholeSymbol))
-                    } else {
-                        Button {
-                            if progress > 1 {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
                                     progress -= 1
                                 }
-                            } else {
-                                dismiss()
                             }
-                        } label: {
-                            Image(systemName: progress > 1 ? "chevron.left" : "xmark")
-                                .font(.system(.callout, design: .rounded).weight(.semibold))
-                                .foregroundColor(Color.SubtitleText)
-                                .padding(8)
-                                .background(Color.SecondaryBackground, in: Circle())
+                        } else {
+                            dismiss()
                         }
+                    } label: {
+                        Image(systemName: progress > 1 ? "chevron.left" : "xmark")
+                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .frame(width: 30, height: 30)
+                            .contentTransition(.symbolEffect(.replace.downUp.wholeSymbol))
                     }
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.circle)
+                    .accessibilityLabel(progress > 1 ? "Back" : "Close")
 
                     Spacer()
 
-                    CustomCapsuleProgress(percent: Double(progress) / 7, width: 4, topStroke: Color.DarkBackground, bottomStroke: Color.SecondaryBackground)
+                    ProgressView(value: Double(progress), total: Double(stepCount))
+                        .progressViewStyle(.linear)
+                        .tint(.primary)
                         .frame(width: 60)
+                        .accessibilityLabel("Step \(progress) of \(stepCount)")
                 }
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -264,8 +222,9 @@ struct ImportDataView: View {
 //                                .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .foregroundColor(Color.AlertRed)
                         }
-                        .padding(8)
-                        .background(Color.AlertRed.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 16)
+                        .glassEffect(.regular.tint(Color.AlertRed.opacity(0.15)), in: .capsule)
                         .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
                         .frame(width: 250)
                     }
@@ -300,19 +259,6 @@ struct ImportDataView: View {
 
 //                                .font(.system(size: 26, weight: .semibold, design: .rounded))
 
-                            if progress == 7 {
-                                Button {
-                                    showingCategoryView = true
-                                } label: {
-                                    Image(systemName: "plus")
-                                        .font(.system(.footnote, design: .rounded).weight(.semibold))
-                                        .foregroundColor(Color.SubtitleText)
-                                        .padding(4)
-                                        .background(Color.SecondaryBackground, in: Circle())
-                                        .contentShape(Circle())
-                                }
-                            }
-
                             Spacer()
                         }
                         .frame(maxWidth: .infinity)
@@ -327,22 +273,11 @@ struct ImportDataView: View {
                 .padding(.bottom, 10)
 
                 if progress == 1 {
-                    HStack(spacing: 6) {
-                        Image(systemName: "info.circle.fill")
-                            .font(.system(.subheadline, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-
-                        Text("Additional Pointers")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 17, weight: .semibold, design: .rounded))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding(12)
-                    .foregroundColor(Color.IncomeGreen)
-                    .background(Color.IncomeGreen.opacity(0.23), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                    .padding(.bottom, 20)
+                    Label("Additional Pointers", systemImage: "info.circle.fill")
+                        .font(.system(.headline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.bottom, 14)
 
                     ScrollView(showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 22) {
@@ -479,12 +414,9 @@ struct ImportDataView: View {
                             .font(.system(.title3, design: .rounded).weight(.semibold))
 
 //                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.PrimaryText)
-                            .frame(width: 300, height: 40)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                    .stroke(Color.Outline, lineWidth: 2)
-                            )
+                            .foregroundStyle(.primary)
+                            .frame(width: 300, height: 48)
+                            .background(.fill.quaternary, in: .rect(cornerRadius: 16))
                             .padding(.bottom, 30)
 
                         HStack(spacing: 7) {
@@ -511,13 +443,9 @@ struct ImportDataView: View {
                                 ProgressView()
                             }
                         }
-                        .padding(.horizontal, 10)
-                        .frame(width: 300, height: 40)
-                        .background {
-                            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                .stroke(Color.SubtitleText, lineWidth: 2)
-                                .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-                        }
+                        .padding(.horizontal, 14)
+                        .frame(width: 300, height: 48)
+                        .background(.fill.tertiary, in: .rect(cornerRadius: 16))
                         .onChange(of: dateFormatString) { newValue in
                             let dateFormatter = DateFormatter()
                             dateFormatter.dateFormat = newValue
@@ -529,159 +457,46 @@ struct ImportDataView: View {
                             }
                         }
                     }
-                } else if progress == 7 {
-                    VStack(spacing: 10) {
-                        Text("\(numberOfLinkedCategories)/^[\(uniqueCategories.count) category](inflect: true) linked")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-
-                        TabView(selection: $pageIndex) {
-                            ForEach(uniqueCategories.indices, id: \.self) { categoryIndex in
-                                VStack(spacing: 20) {
-                                    HStack(spacing: 8) {
-                                        Text(uniqueCategories[categoryIndex].excelValue)
-                                            .font(.system(.title3, design: .rounded).weight(.semibold))
-
-                                            .lineLimit(1)
-//                                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                            .foregroundColor(Color.PrimaryText)
-//                                            .frame(height: 36)
-                                            .padding(.vertical, 6)
-                                            .padding(.horizontal, 10)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                    .strokeBorder(Color.Outline, lineWidth: 2)
-                                            )
-                                            .minimumScaleFactor(0.7)
-
-                                        if let unwrappedCategory = uniqueCategories[categoryIndex].category {
-                                            HStack(spacing: 8) {
-                                                Image(systemName: "triangle.fill")
-                                                    .rotationEffect(Angle(degrees: 90))
-                                                    .font(.system(size: 12, weight: .regular, design: .rounded))
-                                                    .foregroundColor(Color.SubtitleText)
-
-                                                HStack(spacing: 5) {
-                                                    Text(unwrappedCategory.wrappedEmoji)
-//                                                        .font(.system(size: 15))
-                                                        .font(.system(.subheadline, design: .rounded))
-
-                                                    Text(unwrappedCategory.wrappedName)
-                                                        .font(.system(.title3, design: .rounded).weight(.semibold))
-
-                                                        .lineLimit(1)
-
-//                                                        .font(.system(size: 19, weight: .semibold, design: .rounded))
-                                                }
-                                                .padding(.vertical, 6)
-                                                .padding(.horizontal, 10)
-//                                                .frame(height: 36)
-                                                .foregroundColor(Color(hex: unwrappedCategory.wrappedColour))
-                                                .background(Color(hex: unwrappedCategory.wrappedColour).opacity(0.35), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                                .minimumScaleFactor(0.7)
-                                            }
-                                            .transition(.opacity)
-                                        }
-                                    }
-                                    .drawingGroup()
-
-                                    MatchCategoryStepperView(category: $uniqueCategories[categoryIndex].category, categories: uniqueCategories[categoryIndex].income ? incomeCategories : expenseCategories, pageIndex: $pageIndex, maxIndex: uniqueCategories.count)
-                                        .overlay(alignment: .bottomTrailing) {
-                                            let income = uniqueCategories[categoryIndex].income
-
-                                            ZStack {
-                                                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                                    .fill(Color.PrimaryBackground)
-
-                                                Image(systemName: income ? "plus" : "minus")
-                                                    .font(.system(size: 18, weight: .semibold))
-                                                    .foregroundColor(income ? Color.IncomeGreen : Color.AlertRed)
-                                                    .frame(width: 30, height: 30)
-                                                    .background(income ? Color.IncomeGreen.opacity(0.23) : Color.AlertRed.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                                            }
-                                            .frame(width: 30, height: 30)
-                                            .contentShape(Rectangle())
-                                            .onTapGesture {
-                                                uniqueCategories[categoryIndex].income.toggle()
-                                            }
-                                            .padding(12)
-                                        }
-
-                                    Spacer()
-                                }
-                                .padding(10)
-                                .tag(categoryIndex)
-                            }
-                        }
-                        .tabViewStyle(.page(indexDisplayMode: .always))
-                        .frame(height: 390)
-                    }
                 }
 
                 Spacer()
 
                 if progress == 1 {
-                    VStack(spacing: 13) {
+                    VStack(spacing: 12) {
                         Button {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
                             importing = true
-
                         } label: {
-                            HStack(spacing: 6) {
-                                Text("Import")
-                                    .font(.system(.title3, design: .rounded).weight(.semibold))
-
-//                                    .font(.system(size: 19, weight: .semibold, design: .rounded))
-
-                                Image(systemName: "square.and.arrow.up.fill")
-                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            }
-                            .frame(height: 50)
-                            .frame(maxWidth: .infinity)
-                            .foregroundColor(Color.LightIcon)
-                            .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                            Label("Import", systemImage: "square.and.arrow.down")
+                                .font(.system(.title3, design: .rounded).weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 6)
                         }
-                        .buttonStyle(BouncyButton(duration: 0.2, scale: 0.8))
+                        .buttonStyle(.glassProminent)
+                        .controlSize(.large)
 
                         Button {
                             exportSample = true
                         } label: {
-                            HStack(spacing: 6) {
-//                                Image(systemName: "doc.text")
-//                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                Text("Sample Sheet")
-                                    .underline()
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-
-//                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            }
-                            .foregroundColor(Color.SubtitleText)
+                            Text("Sample Sheet")
+                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 6)
                         }
+                        .buttonStyle(.glass)
+                        .controlSize(.large)
                     }
 
                 } else {
                     Button {
-                        if progress == 7 {
-                            if numberOfLinkedCategories == uniqueCategories.count {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    progress += 1
-                                }
-
-                                importData()
-                            } else {
-                                showToast = true
-                                toastMessage = "Unlinked Categories"
-                            }
-
-                        } else if progress > 5 {
+                        if progress == 6 {
+                            // Categories are matched or created automatically, so go straight to processing.
                             withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                progress += 1
+                                progress = 8
                             }
+
+                            importData()
                         } else {
                             withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
                                 guard !remainingColumns.isEmpty else { return }
@@ -733,10 +548,7 @@ struct ImportDataView: View {
                                         validDateFormatString = true
                                     }
 
-                                    let categoryColumnIndex = selectedColumns[0]
-                                    uniqueCategories = columns[categoryColumnIndex].unique().map {
-                                        MatchedCategory(excelValue: $0, income: false)
-                                    }
+                                    uniqueCategories = matchedCategories()
 
                                     columnSelectionCompleted = true
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -750,16 +562,13 @@ struct ImportDataView: View {
                             }
                         }
                     } label: {
-                        Text("Continue")
+                        Text(progress == 6 ? "Import" : "Continue")
                             .font(.system(.title3, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 19, weight: .semibold, design: .rounded))
-                            .frame(height: 50)
                             .frame(maxWidth: .infinity)
-                            .foregroundColor(Color.LightIcon)
-                            .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                            .padding(.vertical, 6)
                     }
-                    .buttonStyle(BouncyButton(duration: 0.2, scale: 0.8))
+                    .buttonStyle(.glassProminent)
+                    .controlSize(.large)
                 }
             }
         }
@@ -798,14 +607,6 @@ struct ImportDataView: View {
         .sheet(isPresented: $exportSample) {
             if let url = Bundle.main.url(forResource: "sample", withExtension: "csv") {
                 ActivityViewController(activityItems: [url])
-            }
-        }
-        .sheet(isPresented: $showingCategoryView) {
-            if #available(iOS 16.0, *) {
-                NewCategoryAlert(income: $income, bottomSpacers: false, budgetMode: false)
-                    .presentationDetents([.height(270)])
-            } else {
-                NewCategoryAlert(income: $income, bottomSpacers: true, budgetMode: false)
             }
         }
         .animation(.easeOut(duration: 0.2), value: showToast)
@@ -899,7 +700,7 @@ struct ImportDataView: View {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = dateFormatString
 
-        let categoryDictionary: [String: Category] = Dictionary(uniqueKeysWithValues: uniqueCategories.map { ($0.excelValue, $0.category!) })
+        let categoryDictionary = resolveCategories()
 
         rows.forEach { row in
 //            let rowCategory = categoryDictionary[row[categoryColumnIndex]]
@@ -934,6 +735,83 @@ struct ImportDataView: View {
         }
     }
 
+    /// Index of an unassigned column whose values are all "Income" or "Expense", such as the
+    /// Type column in the sample sheet, if the file has one.
+    func typeColumnIndex() -> Int? {
+        remainingColumns.first { index in
+            let values = rows.map { $0.indices.contains(index) ? $0[index].trimmingCharacters(in: .whitespaces).lowercased() : "" }
+            return !values.isEmpty && values.allSatisfy { $0 == "income" || $0 == "expense" }
+        }
+    }
+
+    /// The distinct values of the category column, each marked income or expense. The type comes
+    /// from a Type column when present (by majority for that value); otherwise it defaults to expense.
+    func matchedCategories() -> [MatchedCategory] {
+        let categoryColumnIndex = selectedColumns[0]
+        let typeIndex = typeColumnIndex()
+
+        var incomeVotes = [String: Int]()
+        if let typeIndex {
+            for row in rows where row.indices.contains(categoryColumnIndex) && row.indices.contains(typeIndex) {
+                let isIncome = row[typeIndex].trimmingCharacters(in: .whitespaces).lowercased() == "income"
+                incomeVotes[row[categoryColumnIndex], default: 0] += isIncome ? 1 : -1
+            }
+        }
+
+        return columns[categoryColumnIndex].unique().map { value in
+            MatchedCategory(excelValue: value, income: (incomeVotes[value] ?? -1) > 0)
+        }
+    }
+
+    /// Maps every category value in the CSV to a Nickel category: an existing one with the same name
+    /// (ignoring case and surrounding spaces) and type, or a newly created one.
+    func resolveCategories() -> [String: Category] {
+        let normalize = { (name: String) in name.trimmingCharacters(in: .whitespaces).lowercased() }
+
+        var existing = dataController.getAllCategories(income: false) + dataController.getAllCategories(income: true)
+        var unusedColours = Color.colorArray.filter { colour in !existing.contains { $0.wrappedColour == colour } }
+        let suggestions = SuggestedCategory.expenses + SuggestedCategory.incomes
+
+        var resolved = [String: Category]()
+        var created = 0
+
+        for matched in uniqueCategories {
+            let name = matched.excelValue.trimmingCharacters(in: .whitespaces)
+            let key = normalize(name)
+
+            if let match = existing.first(where: { normalize($0.wrappedName) == key && $0.income == matched.income }) {
+                resolved[matched.excelValue] = match
+                continue
+            }
+
+            let category = Category(context: dataController.container.viewContext)
+            category.name = name.isEmpty ? String(localized: "Other") : name
+            category.emoji = suggestions.first { normalize($0.name) == key }?.emoji ?? "🏷️"
+            category.dateCreated = Date.now
+            category.id = UUID()
+            category.income = matched.income
+
+            if matched.income {
+                category.colour = "#76FBB0"
+            } else {
+                if unusedColours.isEmpty {
+                    unusedColours = Color.colorArray
+                }
+                category.colour = unusedColours.removeFirst()
+            }
+
+            let sameType = existing.filter { $0.income == matched.income }
+            category.order = (sameType.map(\.order).max() ?? -1) + 1
+
+            existing.append(category)
+            resolved[matched.excelValue] = category
+            created += 1
+        }
+
+        createdCategoryCount = created
+        return resolved
+    }
+
     func deduceDateFormat(from dateString: String) -> String? {
         let dateFormats = ["yyyy-MM-dd", "dd-MM-yyyy", "MM-dd-yyyy",
                            "yyyy/MM/dd", "dd/MM/yyyy", "MM/dd/yyyy",
@@ -965,17 +843,11 @@ struct ImportDataView: View {
     @ViewBuilder
     func PointerView(number: Int, text: String) -> some View {
         HStack(alignment: .top, spacing: 15) {
-            ZStack {
-                Circle()
-                    .fill(Color.SecondaryBackground)
-
-                Text("\(number)")
-                    .font(.system(.body, design: .rounded).weight(.bold))
-
-//                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.SubtitleText)
-            }
-            .frame(width: 25, height: 25)
+            Text("\(number)")
+                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                .foregroundStyle(.secondary)
+                .frame(width: 28, height: 28)
+                .background(.fill.tertiary, in: .circle)
 
             Text(text)
                 .font(.system(.body, design: .rounded).weight(.medium))
@@ -997,175 +869,6 @@ struct ActivityViewController: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_: UIActivityViewController, context _: UIViewControllerRepresentableContext<ActivityViewController>) {}
-}
-
-struct MatchCategoryStepperView: View {
-    @Binding var category: Category?
-    @Binding var pageIndex: Int
-    var categories: [Category]
-    var maxIndex: Int
-//
-//    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-//
-//    var fontSize: CGFloat {
-//        switch dynamicTypeSize {
-//        case .xSmall:
-//            return 14
-//        case .small:
-//            return 15
-//        case .medium:
-//            return 16
-//        case .large:
-//            return 17
-//        case .xLarge:
-//            return 19
-//        case .xxLarge:
-//            return 21
-//        case .xxxLarge:
-//            return 23
-//        default:
-//            return 23
-//        }
-//    }
-
-    var body: some View {
-        VStack {
-            if categories.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "tray.full.fill")
-                        .font(.system(.title, design: .rounded))
-
-//                        .font(.system(size: 28, weight: .regular, design: .rounded))
-                        .foregroundColor(Color.SubtitleText.opacity(0.7))
-                        .padding(.top, 20)
-
-                    Text("No remaining\ncategories.")
-                        .font(.system(.callout, design: .rounded).weight(.medium))
-
-//                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(Color.SubtitleText.opacity(0.7))
-                        .padding(.bottom, 20)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            } else {
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 8) {
-                        ForEach(getRows(), id: \.self) { rows in
-
-                            HStack(spacing: 8) {
-                                ForEach(rows) { row in
-
-                                    // Row View....
-                                    RowView(categoryInput: row)
-                                }
-                            }
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .padding(15)
-        .frame(height: 250)
-        .background(Color.Outline.opacity(0.3), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .stroke(Color.Outline, lineWidth: 2)
-        }
-//        .background(Color.PrimaryBackground, in: )
-    }
-
-    func getRows() -> [[Category]] {
-        var rows: [[Category]] = []
-        var currentRow: [Category] = []
-
-        var totalWidth: CGFloat = 0
-
-        let screenWidth: CGFloat = UIScreen.main.bounds.width - 80
-
-        categories.forEach { category in
-
-            let roundedFont = UIFont.rounded(ofSize: UIFont.textStyleSize(.body), weight: .semibold)
-
-            let attributes = [NSAttributedString.Key.font: roundedFont]
-
-            let size = (category.fullName as NSString).size(withAttributes: attributes)
-
-            totalWidth += (size.width + 10 + 10 + 8)
-
-            if totalWidth > screenWidth {
-                totalWidth = (!currentRow.isEmpty || rows.isEmpty ? (size.width + 10 + 10 + 8) : 0)
-
-                rows.append(currentRow)
-                currentRow.removeAll()
-                currentRow.append(category)
-
-            } else {
-                currentRow.append(category)
-            }
-        }
-
-        // Safe check...
-        // if having any value storing it in rows...
-        if !currentRow.isEmpty {
-            rows.append(currentRow)
-            currentRow.removeAll()
-        }
-
-        return rows
-    }
-
-    @ViewBuilder
-    func RowView(categoryInput: Category) -> some View {
-        Button {
-            withAnimation {
-                category = categoryInput
-            }
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                withAnimation {
-                    // remember to check for cap
-                    if pageIndex < maxIndex - 1 {
-                        pageIndex += 1
-                    }
-                }
-            }
-
-        } label: {
-            HStack(spacing: 5) {
-                Text(categoryInput.wrappedEmoji)
-                    .font(.system(.footnote, design: .rounded))
-
-//                    .font(.system(size: 13))
-                Text(categoryInput.wrappedName)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-
-//                    .font(.system(size: 17, weight: .semibold, design: .rounded))
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .foregroundColor(category == categoryInput ? Color(hex: categoryInput.wrappedColour) : Color.PrimaryText)
-            .background(category == categoryInput ? Color(hex: categoryInput.wrappedColour).opacity(0.35) : Color.PrimaryBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay {
-                if category != categoryInput {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(Color.Outline,
-                                      style: StrokeStyle(lineWidth: 1.5))
-                }
-            }
-//            .opacity(category == nil ? 1 : (category == categoryInput ? 1 : 0.4))
-        }
-        .buttonStyle(BouncyButton(duration: 0.2, scale: 0.8))
-    }
-
-    init(category: Binding<Category?>?, categories: [Category], pageIndex: Binding<Int>, maxIndex: Int) {
-        _category = category ?? Binding.constant(nil)
-        _pageIndex = pageIndex
-        self.categories = categories
-        self.maxIndex = maxIndex
-    }
 }
 
 struct RoundedCorner: Shape {

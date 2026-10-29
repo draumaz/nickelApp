@@ -112,8 +112,9 @@ struct SettingsUpcomingView: View {
 
       ScrollView(showsIndicators: false) {
         FutureListView(dataController: dataController, filterMode: false, limitedMode: false)
-          .padding(.bottom, 70)
+          .padding(.bottom, 20)
       }
+      .swipeActionsContainer()
     }
     .modifier(SettingsSubviewModifier())
     .onAppear {

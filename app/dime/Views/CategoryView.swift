@@ -893,9 +893,9 @@ struct NewCategoryAlert: View {
                             .font(.system(.callout, design: .rounded).weight(.semibold))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(7)
-                            .background(Color.SecondaryBackground, in: Circle())
+                            .foregroundStyle(.primary)
+                            .frame(width: 44, height: 44)
+                            .glassEffect(.regular.interactive(), in: .circle)
                             .contentShape(Circle())
                     }
                 }
@@ -1268,9 +1268,9 @@ struct EditCategoryAlert: View {
                             .font(.system(.callout, design: .rounded).weight(.semibold))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(7)
-                            .background(Color.SecondaryBackground, in: Circle())
+                            .foregroundStyle(.primary)
+                            .frame(width: 44, height: 44)
+                            .glassEffect(.regular.interactive(), in: .circle)
                             .contentShape(Circle())
                     }
 
@@ -1312,8 +1312,8 @@ struct EditCategoryAlert: View {
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(Color.AlertRed)
-                            .padding(7)
-                            .background(Color.AlertRed.opacity(0.23), in: Circle())
+                            .frame(width: 44, height: 44)
+                            .glassEffect(.regular.interactive(), in: .circle)
                             .contentShape(Circle())
                     }
                 }

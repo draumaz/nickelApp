@@ -57,7 +57,6 @@ struct ActualBudgetView: View {
     @FetchRequest(sortDescriptors: []) private var mainBudget: FetchedResults<MainBudget>
     @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
-    @EnvironmentObject var tabBarManager: TabBarManager
 
     @State var newBudget = false
 
@@ -89,19 +88,12 @@ struct ActualBudgetView: View {
 //                        .font(.system(size: 25, weight: .semibold, design: .rounded))
                         .accessibility(addTraits: .isHeader)
 
-                    Button {
-                        newBudget = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-//                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(4)
-                            .background(Color.SecondaryBackground, in: Circle())
-                            .contentShape(Circle())
-                    }
-
                     Spacer()
+
+                    ToolbarButton(systemName: "plus") {
+                        newBudget = true
+                    }
+                    .accessibilityLabel("New Budget")
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, 20)
@@ -113,17 +105,7 @@ struct ActualBudgetView: View {
                         VStack {
                             if let first = mainBudget.first {
                                 NavigationLink(destination: DetailedMainBudgetView(budget: first)
-                                    .onAppear {
-                                        withAnimation(.easeOut.speed(2)) {
-                                            tabBarManager.navigationHideTab()
-                                        }
-                                    }
-                                    .onDisappear {
-                                        withAnimation(.easeOut.speed(2)) {
-                                            tabBarManager.navigationShowTab()
-                                        }
-                                    }
-
+                                    .toolbarVisibility(.hidden, for: .tabBar)
                                 ) {
                                     if budgets.count == 0 {
                                         MainBudgetView(budget: first, solo: true)
@@ -143,17 +125,7 @@ struct ActualBudgetView: View {
                                 VStack(spacing: 10) {
                                     ForEach(budgets, id: \.self) { budget in
                                         NavigationLink(destination: DetailedBudgetView(budget: budget)
-                                            .onAppear {
-                                                withAnimation(.easeOut.speed(2)) {
-                                                    tabBarManager.navigationHideTab()
-                                                }
-                                            }
-                                            .onDisappear {
-                                                withAnimation(.easeOut.speed(2)) {
-                                                    tabBarManager.navigationShowTab()
-                                                }
-                                            }
-
+                                            .toolbarVisibility(.hidden, for: .tabBar)
                                         ) {
                                             SingleBudgetView(budget: budget, toDelete: $toDelete, toEdit: $toEdit, budgetRows: budgetRows)
                                         }
@@ -164,17 +136,7 @@ struct ActualBudgetView: View {
                                 LazyVGrid(columns: layout, spacing: 15) {
                                     ForEach(budgets, id: \.self) { budget in
                                         NavigationLink(destination: DetailedBudgetView(budget: budget)
-                                            .onAppear {
-                                                withAnimation(.easeOut.speed(2)) {
-                                                    tabBarManager.navigationHideTab()
-                                                }
-                                            }
-                                            .onDisappear {
-                                                withAnimation(.easeOut.speed(2)) {
-                                                    tabBarManager.navigationShowTab()
-                                                }
-                                            }
-
+                                            .toolbarVisibility(.hidden, for: .tabBar)
                                         ) {
                                             SingleBudgetView(budget: budget, toDelete: $toDelete, toEdit: $toEdit, budgetRows: budgetRows)
                                         }
@@ -184,7 +146,7 @@ struct ActualBudgetView: View {
                                 .padding(5)
                             }
                         }
-                        .padding(.bottom, 70)
+                        .padding(.bottom, 20)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .id(refreshID)
@@ -1245,36 +1207,27 @@ struct DetailedBudgetView: View {
     var body: some View {
         VStack(spacing: 15) {
             HStack {
-                Button {
-                    self.presentationMode.wrappedValue.dismiss()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.SubtitleText)
-
-                        Text("Back")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.SubtitleText)
-                    }
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 8)
-                    .fixedSize(horizontal: false, vertical: /*@START_MENU_TOKEN@*/true/*@END_MENU_TOKEN@*/)
-                    .background(Color.SecondaryBackground, in: Capsule())
-                }
+                BackButton(presentationMode: presentationMode)
 
                 Spacer()
 
-                DetailedBudgetViewTopBarButton(imageName: "plus", color: Color("110")) {
-                    newTransaction = true
-                }
+                GlassEffectContainer {
+                    HStack(spacing: 8) {
+                        DetailedBudgetViewTopBarButton(imageName: "plus", color: Color("110")) {
+                            newTransaction = true
+                        }
+                        .accessibilityLabel("Add Transaction")
 
-                DetailedBudgetViewTopBarButton(imageName: "pencil", color: Color("6")) {
-                    toEdit = budget
-                }
+                        DetailedBudgetViewTopBarButton(imageName: "pencil", color: Color("6")) {
+                            toEdit = budget
+                        }
+                        .accessibilityLabel("Edit Budget")
 
-                DetailedBudgetViewTopBarButton(imageName: "trash.fill", color: Color.AlertRed) {
-                    toDelete = budget
+                        DetailedBudgetViewTopBarButton(imageName: "trash.fill", color: Color.AlertRed) {
+                            toDelete = budget
+                        }
+                        .accessibilityLabel("Delete Budget")
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -1316,33 +1269,22 @@ struct DetailedMainBudgetView: View {
     var body: some View {
         VStack(spacing: 15) {
             HStack {
-                Button {
-                    self.presentationMode.wrappedValue.dismiss()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.SubtitleText)
-
-                        Text("Back")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.SubtitleText)
-                    }
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 8)
-                    .fixedSize(horizontal: false, vertical: /*@START_MENU_TOKEN@*/true/*@END_MENU_TOKEN@*/)
-//                    .frame(height: 30, alignment: .center)
-                    .background(Color.SecondaryBackground, in: Capsule())
-                }
+                BackButton(presentationMode: presentationMode)
 
                 Spacer()
 
-                DetailedBudgetViewTopBarButton(imageName: "pencil", color: Color("6")) {
-                    toEdit = budget
-                }
+                GlassEffectContainer {
+                    HStack(spacing: 8) {
+                        DetailedBudgetViewTopBarButton(imageName: "pencil", color: Color("6")) {
+                            toEdit = budget
+                        }
+                        .accessibilityLabel("Edit Budget")
 
-                DetailedBudgetViewTopBarButton(imageName: "trash.fill", color: Color.AlertRed) {
-                    toDelete = budget
+                        DetailedBudgetViewTopBarButton(imageName: "trash.fill", color: Color.AlertRed) {
+                            toDelete = budget
+                        }
+                        .accessibilityLabel("Delete Budget")
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -1661,6 +1603,7 @@ struct TimeBudgetView: View {
                             .padding(.horizontal, 15)
                     }
                 }
+                .swipeActionsContainer()
                 .frame(maxHeight: .infinity)
 
                 BudgetStepperView(category: category, date: $startDate, startDate: budget.wrappedDate, budgetType: budgetType)

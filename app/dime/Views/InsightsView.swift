@@ -322,6 +322,7 @@ struct HorizontalPieChartView: View {
                         }
                     }
                 }
+                .swipeActionsContainer()
             }
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         }
@@ -460,10 +461,9 @@ struct FilteredDateInsightsView: View {
 
     @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-    
+
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
     var showExpenseOrIncomeSign: Bool = true
-
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1128,23 +1128,23 @@ struct WeekGraphView: View {
                 Group {
                     if !incomeFiltering {
                         FilteredInsightsView(startDate: showingWeek, type: 1)
-                            .padding(.bottom, 70)
+                            .padding(.bottom, 20)
                             .padding(.horizontal, 20)
                     } else {
                         if selectedDate == nil {
                             HorizontalPieChartView(date: showingWeek, categoryFilter: $categoryFilter, categoryFilterMode: $categoryFilterMode, selectedDate: $selectedDate, chosenAmount: $chosenCategoryAmount, chosenName: $chosenCategoryName, type: .week, income: income)
                                 .padding(.horizontal, 30)
-                                .padding(.bottom, 70)
+                                .padding(.bottom, 20)
                                 .id(refreshID1)
 
                             if categoryFilterMode {
                                 FilteredCategoryInsightsView(category: categoryFilter, date: showingWeek, type: .week)
-                                    .padding(.bottom, 70)
+                                    .padding(.bottom, 20)
                                     .padding(.horizontal, 20)
                             }
                         } else {
                             FilteredDateInsightsView(date: selectedDate ?? Date.now, income: income)
-                                .padding(.bottom, 70)
+                                .padding(.bottom, 20)
                                 .padding(.horizontal, 20)
                         }
                     }
@@ -1155,6 +1155,7 @@ struct WeekGraphView: View {
                 }
             }
         }
+        .swipeActionsContainer()
         .onReceive(self.didSave) { _ in
             self.refreshID = UUID()
             self.refreshID1 = UUID()
@@ -1545,27 +1546,27 @@ struct MonthGraphView: View {
                     categoryFilterMode = false
                 }
                 .padding(.bottom, incomeFiltering ? 5 : 20)
-                
+
                 Group {
                     if !incomeFiltering {
                         FilteredInsightsView(startDate: showingMonth, type: 2)
-                            .padding(.bottom, 70)
+                            .padding(.bottom, 20)
                             .padding(.horizontal, 20)
                     } else {
                         if selectedDate == nil {
                             HorizontalPieChartView(date: showingMonth, categoryFilter: $categoryFilter, categoryFilterMode: $categoryFilterMode, selectedDate: $selectedDate, chosenAmount: $chosenCategoryAmount, chosenName: $chosenCategoryName, type: .month, income: income)
                                 .padding(.horizontal, 30)
-                                .padding(.bottom, 70)
+                                .padding(.bottom, 20)
                                 .id(refreshID1)
 
                             if categoryFilterMode {
                                 FilteredCategoryInsightsView(category: categoryFilter, date: showingMonth, type: .month)
-                                    .padding(.bottom, 70)
+                                    .padding(.bottom, 20)
                                     .padding(.horizontal, 20)
                             }
                         } else {
                             FilteredDateInsightsView(date: selectedDate ?? Date.now, income: income)
-                                .padding(.bottom, 70)
+                                .padding(.bottom, 20)
                                 .padding(.horizontal, 20)
                         }
                     }
@@ -1596,6 +1597,7 @@ struct MonthGraphView: View {
 //                }
             }
         }
+        .swipeActionsContainer()
         .onReceive(self.didSave) { _ in
             self.refreshID = UUID()
             self.refreshID1 = UUID()
@@ -1928,29 +1930,30 @@ struct YearGraphView: View {
                 Group {
                     if !incomeFiltering {
                         FilteredInsightsView(startDate: showingYear, type: 3)
-                            .padding(.bottom, 70)
+                            .padding(.bottom, 20)
                             .padding(.horizontal, 20)
                     } else {
                         if selectedDate == nil {
                             HorizontalPieChartView(date: showingYear, categoryFilter: $categoryFilter, categoryFilterMode: $categoryFilterMode, selectedDate: $selectedDate, chosenAmount: $chosenCategoryAmount, chosenName: $chosenCategoryName, type: .year, income: income)
                                 .padding(.horizontal, 30)
-                                .padding(.bottom, 70)
+                                .padding(.bottom, 20)
                                 .id(refreshID1)
 
                             if categoryFilterMode {
                                 FilteredCategoryInsightsView(category: categoryFilter, date: showingYear, type: .year)
-                                    .padding(.bottom, 70)
+                                    .padding(.bottom, 20)
                                     .padding(.horizontal, 20)
                             }
                         } else {
                             FilteredInsightsView(startDate: selectedDate ?? Date.now, income: income, type: 2)
-                                .padding(.bottom, 70)
+                                .padding(.bottom, 20)
                                 .padding(.horizontal, 20)
                         }
                     }
                 }
             }
         }
+        .swipeActionsContainer()
         .onReceive(self.didSave) { _ in
             self.refreshID = UUID()
             self.refreshID1 = UUID()

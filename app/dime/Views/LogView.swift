@@ -9,11 +9,13 @@ import CloudKitSyncMonitor
 import CoreData
 import Foundation
 import SwiftUIIntrospect
-import Popovers
 import SwiftUI
 
 struct LogView: View {
-    @ObservedObject var syncMonitor = SyncMonitor.shared
+    // SyncMonitor.shared listens for iCloud account changes via CKContainer.default(),
+    // which traps when the app lacks the iCloud entitlement. iCloud sync is disabled,
+    // so use a non-listening monitor instead.
+    @ObservedObject var syncMonitor = SyncMonitor(listen: false)
 
     @State var updatedRecurring = false
 
@@ -42,8 +44,6 @@ struct LogView: View {
     @AppStorage("logTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var logTimeFrame = 2
     let subtitleText = ["today", "this week", "this month", "this year"]
 
-    // show filter menu
-    @State var showFilter = false
     @State var filter = FilterType.all
 
     // filters
@@ -95,114 +95,6 @@ struct LogView: View {
 
         } else {
             VStack(spacing: 0) {
-                VStack(spacing: 18) {
-                    HStack {
-                        Button {
-                            searchMode = true
-                        } label: {
-                            Image(systemName: "magnifyingglass")
-//                                .font(.system(size: 23, weight: .regular))
-                                .font(.system(.title2, design: .rounded).weight(.regular))
-                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                .foregroundColor(Color.DarkIcon)
-                                .padding(5)
-                                .contentShape(Rectangle())
-                                .background {
-                                    RoundedRectangle(cornerRadius: 7)
-                                        .fill(Color.SecondaryBackground)
-                                        .scaleEffect(progress == 1 ? 1.5 : 1.0)
-                                        .opacity(progress)
-                                }
-                        }
-                        .accessibilityLabel("Search")
-
-                        Spacer()
-
-                        switch filter {
-                        case .all:
-//                            Text(navBarText)
-//                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-//                            .opacity(0)
-                            EmptyView()
-                        case .category:
-                            filterTagView(text: "filter-tag-category")
-                        case .day:
-                            filterTagView(text: "filter-tag-day")
-                        case .week:
-                            filterTagView(text: "filter-tag-week")
-                        case .month:
-                            filterTagView(text: "filter-tag-month")
-                        case .recurring:
-                            filterTagView(text: "filter-tag-recurring")
-                        case .type:
-                            filterTagView(text: "filter-tag-type")
-                        case .upcoming:
-                            filterTagView(text: "filter-tag-upcoming")
-                        }
-
-                        Spacer()
-
-                        Button {
-                            showFilter = true
-                        } label: {
-                            Image(systemName: filter == .all ? "triangle" : "triangle.tophalf.filled")
-                                .font(.system(.title2, design: .rounded).weight(.regular))
-                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                .foregroundColor(Color.DarkIcon)
-                                .rotationEffect(Angle(degrees: 180))
-                                .padding(5)
-                                .contentShape(Rectangle())
-                                .background {
-                                    if showFilter {
-                                        RoundedRectangle(cornerRadius: 7)
-                                            .fill(Color.SecondaryBackground)
-                                    }
-//                                    if pullStatus == .filter || showFilter {
-//                                        RoundedRectangle(cornerRadius: 7)
-//                                            .fill(Color.SecondaryBackground)
-//                                            .scaleEffect(released == .filter ? 1.2 : 1.0)
-//                                            .opacity(released  == .filter ? 0.5 : 1.0)
-//                                    }
-                                }
-                        }
-                        .accessibilityLabel("Filter")
-                        .popover(present: $showFilter, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .bottomRight,
-                                popoverAnchor: .topRight
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
-                            FilterPickerView(filterType: $filter, showMenu: $showFilter)
-                        }
-                    }
-
-                    switch filter {
-                    case .all:
-                        EmptyView()
-                    case .category:
-                        CategoryStepperView(categoryFilter: $categoryFilter)
-                    case .day:
-                        DateStepperView(date: $dateFilter)
-                    case .week:
-                        WeekStepperView(showingDate: $weekFilter)
-                    case .month:
-                        MonthStepperView(showingDate: $monthFilter)
-                    case .recurring:
-                        EmptyView()
-                    case .type:
-                        IncomeFilterToggleView(income: $income)
-                    case .upcoming:
-                        EmptyView()
-                    }
-                }
-                .padding(.horizontal, 25)
-                .frame(height: (filter == .all || filter == .recurring || filter == .upcoming) ? 50 : 110, alignment: .top)
-                .padding(.top, topEdge + 10)
-
                 ScrollView(showsIndicators: false) {
                     if filter == .all {
                         LogInsightsView(navBarText: $navBarText, showCents: showCents, currencySymbol: currencySymbol)
@@ -211,9 +103,86 @@ struct LogView: View {
                     TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
                         .zIndex(0)
                         .padding(.horizontal, 20)
-                        .padding(.bottom, 70 + bottomEdge)
+                        .padding(.bottom, 20)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .swipeActionsContainer()
+                // Float the header controls over the list so content scrolls beneath them,
+                // with the system scroll edge effect, the way system bars behave.
+                .safeAreaBar(edge: .top) {
+                    VStack(spacing: 18) {
+                        HStack {
+                            ToolbarButton(systemName: "magnifyingglass") {
+                                searchMode = true
+                            }
+                            .accessibilityLabel("Search")
+
+                            Spacer()
+
+                            switch filter {
+                            case .all:
+                                EmptyView()
+                            case .category:
+                                filterTagView(text: "filter-tag-category")
+                            case .day:
+                                filterTagView(text: "filter-tag-day")
+                            case .week:
+                                filterTagView(text: "filter-tag-week")
+                            case .month:
+                                filterTagView(text: "filter-tag-month")
+                            case .recurring:
+                                filterTagView(text: "filter-tag-recurring")
+                            case .type:
+                                filterTagView(text: "filter-tag-type")
+                            case .upcoming:
+                                filterTagView(text: "filter-tag-upcoming")
+                            }
+
+                            Spacer()
+
+                            // A system menu, which presents on Liquid Glass and morphs out of the button.
+                            // The filter tag in the header shows when a filter is active.
+                            Menu {
+                                Picker("Filter", selection: $filter.animation(.easeIn(duration: 0.15))) {
+                                    ForEach(FilterType.allCases, id: \.self) { filterType in
+                                        Label(LocalizedStringKey(filterType.rawValue), systemImage: FilterType.imageDictionary[filterType] ?? "")
+                                            .tag(filterType)
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "line.3.horizontal.decrease")
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                                    .foregroundStyle(.primary)
+                                    .frame(width: 30, height: 30)
+                            }
+                            .buttonStyle(.glass)
+                            .buttonBorderShape(.circle)
+                            .accessibilityLabel("Filter")
+                        }
+
+                        switch filter {
+                        case .all:
+                            EmptyView()
+                        case .category:
+                            CategoryStepperView(categoryFilter: $categoryFilter)
+                        case .day:
+                            DateStepperView(date: $dateFilter)
+                        case .week:
+                            WeekStepperView(showingDate: $weekFilter)
+                        case .month:
+                            MonthStepperView(showingDate: $monthFilter)
+                        case .recurring:
+                            EmptyView()
+                        case .type:
+                            IncomeFilterToggleView(income: $income)
+                        case .upcoming:
+                            EmptyView()
+                        }
+                    }
+                    .padding(.horizontal, 25)
+                    .padding(.vertical, 8)
+                }
 
 //
 //                CustomRefreshView {
@@ -334,15 +303,14 @@ struct LogView: View {
 //                    .frame(width: 11, height: 11)
                     .font(.system(.caption, design: .rounded).weight(.regular))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                    .foregroundColor(Color.PrimaryText.opacity(0.7))
+                    .foregroundStyle(.secondary)
             }
             .accessibilityLabel("remove filter")
         }
-        .padding(4)
-        .padding(.horizontal, 6)
-        .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-//        .font(.system(size: 17, weight: .medium, design: .rounded))
-        .foregroundColor(Color.PrimaryText)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 14)
+        .foregroundStyle(.primary)
+        .glassEffect(.regular, in: .capsule)
     }
 }
 
@@ -411,7 +379,6 @@ struct LogInsightsView: View {
     let showCents: Bool
     let currencySymbol: String
 
-    @State var showMenu1 = false
     let subtitleText = ["today", "this week", "this month", "this year", "all time"]
 
     @AppStorage("logInsightsTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var timeframe = 2
@@ -508,28 +475,20 @@ struct LogInsightsView: View {
                     Text(LocalizedStringKey(headingText))
                         .font(.system(.body, design: .rounded).weight(.medium))
                         .foregroundColor(Color.PrimaryText.opacity(0.9))
-                    Button {
-                        showMenu1 = true
+                    // A system menu on a glass capsule replaces the custom popover.
+                    Menu {
+                        Picker("Time Frame", selection: $timeframe) {
+                            ForEach(subtitleText.indices, id: \.self) { index in
+                                Text(LocalizedStringKey(subtitleText[index]))
+                                    .tag(index + 1)
+                            }
+                        }
                     } label: {
                         Text(LocalizedStringKey(subtitleText[timeframe - 1]))
-                            .padding(2)
-                            .padding(.horizontal, 6)
                             .font(.system(.body, design: .rounded).weight(.medium))
-                            .foregroundColor(Color.PrimaryText.opacity(9))
-                            .overlay(Capsule().stroke(Color.Outline, lineWidth: 1.3))
+                            .foregroundStyle(.primary)
                     }
-                    .popover(present: $showMenu1, attributes: {
-                        $0.position = .absolute(
-                            originAnchor: .bottom,
-                            popoverAnchor: .top
-                        )
-                        $0.rubberBandingMode = .none
-                        $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                        $0.presentation.animation = .easeInOut(duration: 0.2)
-                        $0.dismissal.animation = .easeInOut(duration: 0.3)
-                    }) {
-                        TimePickerView(showMenu: $showMenu1, timeframe: $timeframe)
-                    }
+                    .buttonStyle(.glass)
                 }
 
                 EmptyView()
@@ -683,7 +642,7 @@ struct SearchView: View {
 //                        .font(.system(size: 18, weight: .medium, design: .rounded))
                 }
             }
-            
+
             ScrollView {
                 if searchQuery == "" {
                     EmptyView()
@@ -755,154 +714,6 @@ struct FilteredSearchView: View {
     }
 }
 
-struct TimePickerView: View {
-    @Namespace var animation
-
-    let timeframes = ["today", "this week", "this month", "this year", "all time"]
-
-    @Binding var showMenu: Bool
-    @Binding var timeframe: Int
-    @State var holdingTimeframe = 0
-
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
-
-    @Environment(\.colorScheme) var systemColorScheme
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
-    }
-
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ForEach(timeframes.indices, id: \.self) { index in
-                HStack {
-                    Text(LocalizedStringKey(timeframes[index]))
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-
-                    Spacer()
-
-                    if holdingTimeframe == index + 1 {
-                        Image(systemName: "checkmark")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-//                            .font(.system(size: 14, weight: .medium))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-//                .font(.system(size: 18, weight: .medium, design: .rounded))
-                .padding(5)
-                .background {
-                    if holdingTimeframe == index + 1 {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(darkMode ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground"))
-                            .matchedGeometryEffect(id: "TAB", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if holdingTimeframe == index + 1 {
-                        showMenu = false
-                    } else {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            holdingTimeframe = index + 1
-                        }
-
-                        timeframe = index + 1
-
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                            showMenu = false
-                        }
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-            }
-        }
-        .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: dynamicTypeSize > .xxLarge ? 185 : 160)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
-        .onAppear {
-            holdingTimeframe = timeframe
-        }
-    }
-}
-
-struct FilterPickerView: View {
-    @Namespace var animation
-    @Namespace var animation1
-    @Binding var filterType: FilterType
-    @Binding var showMenu: Bool
-
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
-
-    @Environment(\.colorScheme) var systemColorScheme
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ForEach(FilterType.allCases, id: \.self) { filter in
-                HStack {
-                    Image(systemName: FilterType.imageDictionary[filter] ?? "")
-//                        .font(.system(size: 16))
-                        .font(.system(.callout, design: .rounded).weight(.regular))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .frame(width: 20)
-                    Text(LocalizedStringKey(filter.rawValue))
-//                        .font(.system(size: 18, weight: .medium, design: .rounded))
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .lineLimit(1)
-                    Spacer()
-
-                    if filterType == filter {
-                        Image(systemName: "checkmark")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-//                            .font(.system(size: 14, weight: .medium))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(5)
-                .background {
-                    if filterType == filter {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(darkMode ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground"))
-                            .matchedGeometryEffect(id: "TAB", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if filterType == filter {
-                        showMenu = false
-                    } else {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            filterType = filter
-                        }
-
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            showMenu = false
-                        }
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-            }
-        }
-        .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: dynamicTypeSize > .xLarge ? 220 : 190)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
-    }
-}
-
 struct TransactionsList: View {
     var filter: FilterType
     var category: Category?
@@ -951,6 +762,32 @@ struct TransactionsList: View {
     }
 }
 
+/// A day (or "Upcoming") header in the log, styled like current system section headers:
+/// title case and no drawn divider, with the total as secondary text.
+struct LogSectionHeader: View {
+    let title: String
+    let total: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(.system(.headline, design: .rounded))
+                .foregroundStyle(.primary)
+
+            Spacer()
+
+            Text(total)
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .foregroundStyle(.secondary)
+                .layoutPriority(1)
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .padding(.bottom, 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
 struct ListView: View {
     @SectionedFetchRequest<Date?, Transaction> var transactions: SectionedFetchResults<Date?, Transaction>
 
@@ -960,7 +797,7 @@ struct ListView: View {
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
-    
+
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
@@ -972,28 +809,13 @@ struct ListView: View {
         LazyVStack(spacing: 0) {
             ForEach(transactions) { day in
                 let filtered = filterOutDupes(day: day)
-                let dateText = dateConverter(date: day.id ?? Date.now).uppercased()
+                let dateText = dateConverter(date: day.id ?? Date.now).firstUppercased
 
                 VStack(spacing: 0) {
-                    VStack(spacing: 4) {
-                        HStack {
-                            Text(dateText)
-                            Spacer()
-
-                            Text(filtered.string)
-                                .layoutPriority(1)
-                        }
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundColor(Color.SubtitleText)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(currencySymbol)\(String(format: "%.2f", filtered.string)) was spent \(dateConverterAccessibilityLabel(date: day.id ?? Date.now))")
-
-                        Line()
-                            .stroke(Color.Outline, style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
-                    }
-                    .padding(.horizontal, 10)
+                    LogSectionHeader(title: dateText, total: filtered.string)
+                        // `filtered.string` is already a signed, currency-formatted net total (e.g. "-$5.40").
+                        .accessibilityLabel("Net total \(filtered.string) \(dateConverterAccessibilityLabel(date: day.id ?? Date.now))")
+                        .padding(.horizontal, 10)
                     .padding(.top, 10)
 
                     ForEach(filtered.transactions, id: \.id) { transaction in
@@ -1004,7 +826,7 @@ struct ListView: View {
                 .contextMenu {
                     if #available(iOS 16.0, *) {
                         Button {
-                            guard let image = ImageRenderer(content: SingleDayPhotoView(amountText: filtered.string, dateText: dateText, transactions: filtered.transactions, showCents: showCents, currencySymbol: currencySymbol, currency: currency, swapTimeLabel: swapTimeLabel, future: false)).uiImage else {
+                            guard let image = ImageRenderer(content: SingleDayPhotoView(amountText: filtered.string, dateText: dateText.uppercased(), transactions: filtered.transactions, showCents: showCents, currencySymbol: currencySymbol, currency: currency, swapTimeLabel: swapTimeLabel, future: false)).uiImage else {
                                 return
                             }
 
@@ -1099,7 +921,7 @@ struct FutureListView: View {
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
-    
+
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
@@ -1136,23 +958,8 @@ struct FutureListView: View {
     var body: some View {
         if !transactions.isEmpty {
             VStack(spacing: 0) {
-                VStack(spacing: 4) {
-                    HStack {
-                        Text("UPCOMING")
-                        Spacer()
-
-                        Text(totalString)
-                    }
-                    .font(.system(.callout, design: .rounded).weight(.semibold))
-                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundColor(Color.SubtitleText)
-                    .accessibilityElement(children: .ignore)
-
-                    Line()
-                        .stroke(Color.Outline, style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
-                }
-                .padding(.horizontal, 10)
+                LogSectionHeader(title: String(localized: "Upcoming"), total: totalString)
+                    .padding(.horizontal, 10)
 
                 ForEach(transactions) { transaction in
                     SingleTransactionView(transaction: transaction, showCents: showCents, currencySymbol: currencySymbol, currency: currency, swapTimeLabel: swapTimeLabel, future: true, showExpenseOrIncomeSign: showExpenseOrIncomeSign)
@@ -1201,27 +1008,6 @@ struct SingleTransactionView: View {
 //    // edit mode
 //    @State private var toEdit: Transaction?
 
-    @State private var offset: CGFloat = 0
-    @State private var deleted: Bool = false
-    var deletePopup: Bool {
-        return abs(offset) > UIScreen.main.bounds.width * 0.2
-    }
-
-    var deleteConfirm: Bool {
-        return abs(offset) > UIScreen.main.bounds.width * 0.42
-    }
-
-    @GestureState var isDragging = false
-
-    var imageSize: Double {
-        let scale = min(1.5, 1 + (abs(offset + 40) / 100))
-        return scale * 10 as Double
-    }
-
-    var imageScale: Double {
-        return min(1, 1 + (abs(Double(offset) + 40) / 100))
-    }
-
     var transactionAmountString: String {
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .currency
@@ -1236,194 +1022,117 @@ struct SingleTransactionView: View {
         return numberFormatter.string(from: NSNumber(value: transaction.amount)) ?? "$0"
     }
 
+    /// Overdue recurring entries in the upcoming list aren't deleted; swiping stops them recurring.
+    private var isOverdueRecurring: Bool {
+        future && transaction.wrappedDate < Date.now && transaction.recurringType > 0
+    }
+
     var body: some View {
-        ZStack(alignment: .trailing) {
-            Image(systemName: "xmark")
-//                .font(.system(size: 13, weight: .bold))
-                .font(.system(.caption, design: .rounded).weight(.bold))
-                .dynamicTypeSize(...DynamicTypeSize.xLarge)
-                .foregroundColor(deleteConfirm ? Color.AlertRed : Color.SubtitleText)
-                .padding(5)
-                .background(deleteConfirm ? Color.AlertRed.opacity(0.23) : Color.SecondaryBackground, in: Circle())
-//                .scaleEffect(imageScale)
-                .scaleEffect(deleteConfirm ? 1.1 : 1)
-                .contentShape(Circle())
-                .opacity(deleted ? 0 : 1)
-                .padding(.horizontal, 10)
-                .offset(x: 80)
-                .offset(x: max(-80, offset))
-
-            HStack(spacing: 12) {
-                EmojiLogView(emoji: (transaction.category?.wrappedEmoji ?? ""),
-                             colour: (transaction.category?.wrappedColour ?? "#FFFFFF"), future: future)
-                    .fixedSize(horizontal: true, vertical: true)
-                    .overlay(alignment: .bottomTrailing) {
-                        if transaction.recurringType > 0 {
-                            Image(systemName: "arrow.clockwise")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(Color.DarkIcon)
-                                .padding(3)
-                                .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 6))
-                                .offset(x: 5, y: 5)
-                        }
+        HStack(spacing: 12) {
+            EmojiLogView(emoji: (transaction.category?.wrappedEmoji ?? ""),
+                         colour: (transaction.category?.wrappedColour ?? "#FFFFFF"), future: future)
+                .fixedSize(horizontal: true, vertical: true)
+                .overlay(alignment: .bottomTrailing) {
+                    if transaction.recurringType > 0 {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Color.DarkIcon)
+                            .padding(3)
+                            .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 6))
+                            .offset(x: 5, y: 5)
                     }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(transaction.wrappedNote)
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
-                        .lineLimit(1)
-
-                    Text(getSubtitle())
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .foregroundColor(future ? Color.EvenLighterText : Color.SubtitleText)
-                        .lineLimit(1)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
 
-                if transaction.income {
-                    Text(showExpenseOrIncomeSign ? "+\(transactionAmountString)" : transactionAmountString)
-                        .font(.system(.title3, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen)
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
-                        .layoutPriority(1)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(transaction.wrappedNote)
+                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                    .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
+                    .lineLimit(1)
 
-                } else {
-                    Text(showExpenseOrIncomeSign ? "-\(transactionAmountString)" : transactionAmountString)
-                        .font(.system(.title3, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
-                        .layoutPriority(1)
+                Text(getSubtitle())
+                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                    .foregroundColor(future ? Color.EvenLighterText : Color.SubtitleText)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if transaction.income {
+                Text(showExpenseOrIncomeSign ? "+\(transactionAmountString)" : transactionAmountString)
+                    .font(.system(.title3, design: .rounded).weight(.medium))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                    .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen)
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+
+            } else {
+                Text(showExpenseOrIncomeSign ? "-\(transactionAmountString)" : transactionAmountString)
+                    .font(.system(.title3, design: .rounded).weight(.medium))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                    .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+            }
+        }
+        .id(refreshID)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 10)
+        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .onTapGesture {
+            transactionManager.toEdit = transaction
+        }
+        .contextMenu {
+            if transaction.recurringType > 0 {
+                Button {
+                    transaction.recurringType = 0
+                    dataController.save()
+                } label: {
+                    Label("Stop Recurring", systemImage: "xmark")
                 }
             }
-            .id(refreshID)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 10)
-            .contentShape(RoundedRectangle(cornerRadius: 10))
-            .onTapGesture {
+
+            Button {
                 transactionManager.toEdit = transaction
+            } label: {
+                Label("Edit", systemImage: "pencil")
             }
-            .contextMenu {
-                if transaction.recurringType > 0 {
-                    Button {
+
+            if !(future && transaction.wrappedDate < Date.now && transaction.recurringType > 0) {
+                Button {
+                    transactionManager.toDelete = transaction
+                    transactionManager.future = future
+                    transactionManager.showPopup = true
+
+//                        toDelete = transaction
+//                        deleteMode = true
+                } label: {
+                    Label("Delete", systemImage: "xmark.bin")
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
+        // System swipe actions (enabled by `swipeActionsContainer()` on the enclosing scroll view).
+        // Deleting is immediate and offers Undo via the toast; the context menu's Delete still confirms first.
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            if isOverdueRecurring {
+                Button("Stop Recurring", systemImage: "repeat", role: .destructive) {
+                    withAnimation(.easeInOut(duration: 0.5)) {
                         transaction.recurringType = 0
                         dataController.save()
-                    } label: {
-                        Label("Stop Recurring", systemImage: "xmark")
                     }
                 }
-
-                Button {
-                    transactionManager.toEdit = transaction
-                } label: {
-                    Label("Edit", systemImage: "pencil")
-                }
-
-                if !(future && transaction.wrappedDate < Date.now && transaction.recurringType > 0) {
-                    Button {
+            } else {
+                Button("Delete", systemImage: "trash", role: .destructive) {
+                    withAnimation {
+                        moc.delete(transaction)
+                        transactionManager.showToast = true
                         transactionManager.toDelete = transaction
-                        transactionManager.future = future
-                        transactionManager.showPopup = true
-
-//                        toDelete = transaction
-//                        deleteMode = true
-                    } label: {
-                        Label("Delete", systemImage: "xmark.bin")
                     }
                 }
-            }
-            .offset(x: offset)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
-        }
-        .onChange(of: deletePopup) { _ in
-            if deletePopup {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            }
-        }
-        .onChange(of: deleteConfirm) { _ in
-            if deleteConfirm {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            }
-        }
-        .animation(.easeInOut, value: deletePopup)
-        .simultaneousGesture(
-            DragGesture()
-                .updating($isDragging, body: { _, state, _ in
-                    state = true
-                })
-                .onChanged { value in
-                    if value.translation.width < 0 {
-                        withAnimation {
-                            offset = value.translation.width
-                        }
-                    }
-                }
-                .onEnded { _ in
-                    if deleteConfirm {
-                        deleted = true
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            offset -= UIScreen.main.bounds.width
-                        }
-
-                        if future, transaction.wrappedDate < Date.now, transaction.recurringType > 0 {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    transaction.recurringType = 0
-                                    dataController.save()
-                                }
-                            }
-                        } else {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                                withAnimation {
-                                    moc.delete(transaction)
-                                    transactionManager.showToast = true
-                                    transactionManager.toDelete = transaction
-//                                    transactionManager.future = future
-//                                    transactionManager.toDelete = transaction
-//                                    transactionManager.deletionType = .instant
-                                }
-                            }
-                        }
-
-                    } else if deletePopup {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            offset = 0
-                        }
-
-                        transactionManager.future = future
-                        transactionManager.toDelete = transaction
-                        transactionManager.showPopup = true
-//
-//                        toDelete = transaction
-//                        deleteMode = true
-                    } else {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            offset = 0
-                        }
-                    }
-                }
-        )
-        .onChange(of: isDragging) { _ in
-            if !isDragging && !deleted {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    offset = 0
-                }
-            }
-        }
-        .onChange(of: transactionManager.toDelete) { newValue in
-            if newValue == nil {
-                deleted = false
-                offset = 0
-//                withAnimation(.easeInOut(duration: 0.3)){
-//                   offset = 0
-//                }
             }
         }
     }
@@ -1712,7 +1421,7 @@ struct FilteredDateView: View {
     @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-    
+
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
@@ -1805,14 +1514,12 @@ struct CategoryStepperView: View {
                 Image(systemName: "plus")
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(Color.IncomeGreen)
-                    .padding(7)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .aspectRatio(1.0, contentMode: .fit)
-//                    .frame(width: 36, height: 36)
-                    .background(Color.IncomeGreen.opacity(0.23), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .contentShape(Rectangle())
+                    .foregroundStyle(Color.IncomeGreen)
+                    .frame(width: 44, height: 44)
+                    .glassEffect(.regular.interactive(), in: .circle)
+                    .contentShape(Circle())
+                    .accessibilityLabel("Show expense categories")
+                    .accessibilityAddTraits(.isButton)
                     .onTapGesture {
                         let fetchRequest = dataController.fetchRequestForCategories(income: false)
                         let holding = dataController.results(for: fetchRequest)
@@ -1829,14 +1536,12 @@ struct CategoryStepperView: View {
                 Image(systemName: "minus")
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(Color.AlertRed)
-                    .padding(7)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .aspectRatio(1.0, contentMode: .fit)
-//                    .frame(width: 36, height: 36)
-                    .background(Color.AlertRed.opacity(0.23), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .contentShape(Rectangle())
+                    .foregroundStyle(Color.AlertRed)
+                    .frame(width: 44, height: 44)
+                    .glassEffect(.regular.interactive(), in: .circle)
+                    .contentShape(Circle())
+                    .accessibilityLabel("Show income categories")
+                    .accessibilityAddTraits(.isButton)
                     .onTapGesture {
                         let fetchRequest = dataController.fetchRequestForCategories(income: true)
                         let holding = dataController.results(for: fetchRequest)
@@ -1870,15 +1575,8 @@ struct CategoryStepperView: View {
                             .padding(.vertical, 7)
                             .fixedSize(horizontal: false, vertical: true)
 //                            .frame(height: 36)
-                            .foregroundColor(categoryFilter == item ? Color(hex: item.wrappedColour) : Color.PrimaryText)
-                            .background(getBackground(category: item), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            .overlay {
-                                if categoryFilter != item {
-                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .strokeBorder(Color.Outline,
-                                                      style: StrokeStyle(lineWidth: 1.5))
-                                }
-                            }
+                            .foregroundStyle(categoryFilter == item ? Color(hex: item.wrappedColour) : Color.primary)
+                            .glassEffect(glass(for: item), in: .capsule)
                             .onTapGesture {
                                 categoryFilter = item
                                 withAnimation {
@@ -1894,7 +1592,7 @@ struct CategoryStepperView: View {
             .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 30)
+        .frame(height: 44)
         .onAppear {
             let fetchRequest = dataController.fetchRequestForCategories(income: income)
             categories = dataController.results(for: fetchRequest)
@@ -1914,11 +1612,12 @@ struct CategoryStepperView: View {
         }
     }
 
-    func getBackground(category: Category) -> Color {
+    /// Interactive glass for each chip; the selected category's glass takes its colour as a tint.
+    func glass(for category: Category) -> Glass {
         if category == categoryFilter {
-            return Color(hex: category.wrappedColour).opacity(0.3)
+            return .regular.tint(Color(hex: category.wrappedColour).opacity(0.3)).interactive()
         } else {
-            return Color.PrimaryBackground
+            return .regular.interactive()
         }
     }
 
@@ -1930,58 +1629,15 @@ struct CategoryStepperView: View {
 struct IncomeFilterToggleView: View {
     @Binding var income: Bool
 
-    @Namespace var animation
-
     var body: some View {
-        HStack(spacing: 0) {
-            Text("Expense")
-//                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                .font(.system(.body, design: .rounded).weight(.semibold))
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                .foregroundColor(income == false ? Color.PrimaryText : Color.SubtitleText)
-                .padding(5.5)
-                .padding(.horizontal, 8)
-                .background {
-                    if income == false {
-                        Capsule()
-                            .fill(Color.SecondaryBackground)
-                            .matchedGeometryEffect(id: "TAB1", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    DispatchQueue.main.async {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            income = false
-                        }
-                    }
-                }
-
-            Text("filter-picker-income")
-//                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                .font(.system(.body, design: .rounded).weight(.semibold))
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                .foregroundColor(income == true ? Color.PrimaryText : Color.SubtitleText)
-                .padding(5.5)
-                .padding(.horizontal, 8)
-                .background {
-                    if income == true {
-                        Capsule()
-                            .fill(Color.SecondaryBackground)
-                            .matchedGeometryEffect(id: "TAB1", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    DispatchQueue.main.async {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            income = true
-                        }
-                    }
-                }
+        // The system segmented control, which renders on Liquid Glass.
+        Picker("Transaction Type", selection: $income.animation(.easeIn(duration: 0.15))) {
+            Text("Expense").tag(false)
+            Text("filter-picker-income").tag(true)
         }
-        .padding(3)
-        .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .fixedSize()
     }
 }
 

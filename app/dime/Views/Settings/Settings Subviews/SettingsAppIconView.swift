@@ -26,7 +26,7 @@ struct SettingsAppIconView: View {
       displaySubtitle: "Designed by the brilliant @rudra_dsigns, check out his work on Twitter."),
     AppIconBundle(
       actualFileName: "AppIcon2", exampleFileName: "AppIcon2_EG", displayName: "Unicorn",
-      displaySubtitle: "Dime definitely isn't becoming one but it never hurts to keep dreaming."),
+      displaySubtitle: "Nickel definitely isn't becoming one but it never hurts to keep dreaming."),
     AppIconBundle(
       actualFileName: "AppIcon3", exampleFileName: "AppIcon3_EG", displayName: "V1.5",
       displaySubtitle: "An early prototype also designed by @rudra_dsigns that I kinda fancy."),
@@ -58,8 +58,7 @@ struct SettingsAppIconView: View {
         ForEach(options.indices, id: \.self) { index in
           HStack(spacing: 13) {
             Image(options[index].exampleFileName)
-              .resizable()
-              .aspectRatio(contentMode: .fill)
+              .resizable().scaledToFill()
               .frame(width: 70, height: 70)
               .clipShape(RoundedRectangle(cornerRadius: 18))
               .shadow(color: .black.opacity(0.15), radius: 5, x: 5, y: 5)

@@ -82,9 +82,9 @@ struct UpdateAlert: View {
                         Image(systemName: "xmark")
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
 //                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(7)
-                            .background(Color.SecondaryBackground, in: Circle())
+                            .foregroundStyle(.primary)
+                            .frame(width: 44, height: 44)
+                            .glassEffect(.regular.interactive(), in: .circle)
                             .contentShape(Circle())
                     }
                     .offset(x: 5, y: -5)

@@ -6,6 +6,7 @@
 //
 
 import ConfettiSwiftUI
+import CoreData
 import Foundation
 import SwiftUI
 
@@ -49,43 +50,74 @@ struct HomeView: View {
 
     @State var counter = 0
 
-    @EnvironmentObject var tabBarManager: TabBarManager
-
     @State var showPopup = false
 
-    // Hiding Native TabBar...
+    // New-transaction sheet, launched from the prominent Add tab
+    @State var addTransaction = false
+    @State var transactionCountBeforeAdd = 0
+
+    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
+
+    @AppStorage("confetti", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var confetti: Bool = false
+    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstLaunch: Bool = true
+
     init(topEdge: CGFloat, bottomEdge: CGFloat) {
-        UITabBar.appearance().isHidden = true
         self.topEdge = topEdge
         self.bottomEdge = bottomEdge
     }
 
+    /// Selection value for the Add tab. Selecting it presents the new-transaction sheet
+    /// rather than switching tabs.
+    private static let addTabValue = "Add"
+
+    /// Intercepts selection of the Add tab so the tab bar keeps the current tab selected
+    /// while the new-transaction sheet is presented.
+    private var tabSelection: Binding<String> {
+        Binding {
+            currentTab
+        } set: { newValue in
+            if newValue == Self.addTabValue {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                addTransaction = true
+            } else {
+                currentTab = newValue
+            }
+        }
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $currentTab) {
-                LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
-                    .ignoresSafeArea(.all)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Log")
+            TabView(selection: tabSelection) {
+                Tab("Log", systemImage: "list.bullet.rectangle", value: "Log") {
+                    LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
 
-                InsightsView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Insights")
+                Tab("Insights", systemImage: "chart.pie", value: "Insights") {
+                    InsightsView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
 
-                BudgetView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Budget")
+                Tab("Budget", systemImage: "chart.bar", value: "Budget") {
+                    BudgetView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
 
-                SettingsView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Settings")
+                Tab("Settings", systemImage: "gearshape", value: "Settings") {
+                    SettingsView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+
+                // The prominent tab is the system's treatment for a high-frequency action
+                // such as composing; it never becomes the selected tab (see `tabSelection`).
+                Tab("Add Transaction", systemImage: "plus", value: Self.addTabValue, role: .prominent) {
+                    Color.clear
+                }
             }
+            .tabBarMinimizeBehavior(.onScrollDown)
             .allowsHitTesting(showPopup ? false : true)
             .environmentObject(toastPresenter)
             .environmentObject(transactionManager)
-
-            CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, counter: $counter, launchAdd: launchAdd)
-                .offset(y: tabBarManager.hideTab ? (70 + bottomEdge) : 0)
 
             if showPopup {
                 Rectangle()
@@ -142,6 +174,25 @@ struct HomeView: View {
         }) { transaction in
             TransactionView(toEdit: transaction)
         }
+        .fullScreenCover(isPresented: $addTransaction, onDismiss: {
+            if confetti && transactionCountBeforeAdd != transactions.count {
+                counter += 1
+            }
+
+            if firstLaunch {
+                firstLaunch = false
+            }
+        }, content: {
+            TransactionView(toEdit: nil)
+        })
+        .onChange(of: addTransaction) { _, isPresented in
+            if isPresented {
+                transactionCountBeforeAdd = transactions.count
+            }
+        }
+        .onChange(of: launchAdd) {
+            addTransaction = true
+        }
         .confettiCannon(counter: $counter, num: 50, openingAngle: Angle(degrees: 0), closingAngle: Angle(degrees: 360), radius: 200)
         .onAppear {
             if appLockVM.isAppLockEnabled && fromURL1 {
@@ -171,7 +222,9 @@ struct HomeView: View {
             }
         }
         .onOpenURL { url in
-            if url.host == "search" {
+            if url.host == "newExpense" {
+                addTransaction = true
+            } else if url.host == "search" {
                 currentTab = "Log"
             } else if url.host == "insights" {
                 currentTab = "Insights"

@@ -307,9 +307,9 @@ struct TransactionView: View {
                             //                                .font(.system(size: 16, weight: .semibold))
                                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                 .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                .foregroundColor(Color.SubtitleText)
-                                .padding(7)
-                                .background(Color.SecondaryBackground, in: Circle())
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
+                                .glassEffect(.regular.interactive(), in: .circle)
                                 .contentShape(Circle())
                         }
 
@@ -326,8 +326,8 @@ struct TransactionView: View {
                                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                     .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                                     .foregroundColor(Color.AlertRed)
-                                    .padding(7)
-                                    .background(Color.AlertRed.opacity(0.23), in: Circle())
+                                    .frame(width: 44, height: 44)
+                                    .glassEffect(.regular.interactive(), in: .circle)
                                     .contentShape(Circle())
                             }
                             .accessibilityLabel("delete transaction")
@@ -349,15 +349,15 @@ struct TransactionView: View {
                                             .offset(x: 5.7, y: 1.5)
                                     }
                                     .foregroundColor(Color.IncomeGreen)
-                                    .padding(7)
-                                    .background(Color.IncomeGreen.opacity(0.23), in: Circle())
+                                    .frame(width: 44, height: 44)
+                                    .glassEffect(.regular.interactive(), in: .circle)
                                     .contentShape(Circle())
                             } else {
                                 Image(systemName: "repeat")
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(Color.SubtitleText)
-                                    .padding(7)
-                                    .background(Color.SecondaryBackground, in: Circle())
+                                    .foregroundStyle(.primary)
+                                    .frame(width: 44, height: 44)
+                                    .glassEffect(.regular.interactive(), in: .circle)
                                     .contentShape(Circle())
                             }
                         }
@@ -1637,9 +1637,9 @@ struct CustomRecurringView: View {
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     //                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(Color.SubtitleText)
-                        .padding(7)
-                        .background(Color.SecondaryBackground, in: Circle())
+                        .foregroundStyle(.primary)
+                        .frame(width: 44, height: 44)
+                        .glassEffect(.regular.interactive(), in: .circle)
                         .contentShape(Circle())
                 }
 
@@ -1666,8 +1666,8 @@ struct CustomRecurringView: View {
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     //                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color.IncomeGreen)
-                        .padding(7)
-                        .background(Color.IncomeGreen.opacity(0.23), in: Circle())
+                        .frame(width: 44, height: 44)
+                        .glassEffect(.regular.interactive(), in: .circle)
                         .contentShape(Circle())
                 }
             }

@@ -172,9 +172,9 @@ struct BrandNewBudgetView: View {
                         Image(systemName: showBackButton ? "chevron.left" : "xmark")
                             .font(.system(.callout, design: .rounded).weight(.semibold))
 
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(8)
-                            .background(Color.SecondaryBackground, in: Circle())
+                            .foregroundStyle(.primary)
+                            .frame(width: 44, height: 44)
+                            .glassEffect(.regular.interactive(), in: .circle)
                     }
                     .contentTransition(.symbolEffect(.replace.downUp.wholeSymbol))
                 } else {
@@ -195,9 +195,9 @@ struct BrandNewBudgetView: View {
                     } label: {
                         Image(systemName: showBackButton ? "chevron.left" : "xmark")
                             .font(.system(.callout, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(8)
-                            .background(Color.SecondaryBackground, in: Circle())
+                            .foregroundStyle(.primary)
+                            .frame(width: 44, height: 44)
+                            .glassEffect(.regular.interactive(), in: .circle)
                     }
                 }
 

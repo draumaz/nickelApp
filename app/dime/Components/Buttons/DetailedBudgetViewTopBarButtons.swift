@@ -8,22 +8,21 @@
 import Foundation
 import SwiftUI
 
+/// A circular Liquid Glass action button for the detailed budget top bar.
+/// Place adjacent buttons in a `GlassEffectContainer` so their glass renders together.
 struct DetailedBudgetViewTopBarButton: View {
     var imageName: String
     var color: Color
     var action: () -> Void
 
     var body: some View {
-        Button(action: {
-            self.action()
-        }) {
+        Button(action: action) {
             Image(systemName: imageName)
-                .font(.system(.callout, design: .rounded).weight(.semibold))
-                .foregroundColor(color)
-                .padding(8)
-//                .frame(width: 30, height: 30)
-                .background(color.opacity(0.23), in: Circle())
-                .contentShape(Circle())
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .foregroundStyle(color)
+                .frame(width: 30, height: 30)
         }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
     }
 }

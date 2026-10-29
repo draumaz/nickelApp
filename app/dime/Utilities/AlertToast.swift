@@ -415,8 +415,7 @@ public struct AlertToast: View {
                 Spacer()
                 Image(systemName: name)
                     .renderingMode(.template)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .resizable().scaledToFit()
                     .scaledToFit()
                     .foregroundColor(color)
                     .padding(.bottom)
@@ -424,8 +423,7 @@ public struct AlertToast: View {
             case let .image(name, color):
                 Spacer()
                 Image(name)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .resizable().scaledToFit()
                     .scaledToFit()
                     .foregroundColor(color)
                     .padding(.bottom)
@@ -716,8 +714,7 @@ private struct TextForegroundModifier: ViewModifier {
 private extension Image {
     func hudModifier() -> some View {
         renderingMode(.template)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
+            .resizable().scaledToFit()
             .frame(maxWidth: 23, maxHeight: 23, alignment: .center)
     }
 }

@@ -46,8 +46,7 @@ struct ShaderPlaygroundShowcase: View {
     private var OverlayImage: some View {
         VStack {
             Image("woman")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
+                .resizable().scaledToFill()
                 .ignoresSafeArea()
         }
     }
