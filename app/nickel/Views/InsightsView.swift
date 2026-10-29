@@ -7,13 +7,11 @@
 
 import Foundation
 import SwiftUIIntrospect
-import Popovers
 import SwiftUI
 
 struct InsightsView: View {
     @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
 
-    @State private var showTimeMenu = false
     @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var chartType = 1
 
     private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
@@ -69,8 +67,15 @@ struct InsightsView: View {
                         .accessibility(addTraits: .isHeader)
                     Spacer()
 
-                    Button {
-                        showTimeMenu = true
+                    // System menu so the button morphs into its options with the Liquid Glass animation.
+                    // chartType is stored as 1/2/3 for week/month/year.
+                    Menu {
+                        Picker("Time Frame", selection: $chartType) {
+                            ForEach(Array(ChartTimeFrame.allCases.enumerated()), id: \.element) { index, time in
+                                Text(LocalizedStringKey(time.rawValue))
+                                    .tag(index + 1)
+                            }
+                        }
                     } label: {
                         HStack(spacing: 4.5) {
                             Text(chartTypeString)
@@ -82,18 +87,6 @@ struct InsightsView: View {
                         .foregroundColor(Color.PrimaryText.opacity(0.9))
                     }
                     .buttonStyle(.glass)
-                    .popover(present: $showTimeMenu, attributes: {
-                        $0.position = .absolute(
-                            originAnchor: .bottomRight,
-                            popoverAnchor: .topRight
-                        )
-                        $0.rubberBandingMode = .none
-                        $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                        $0.presentation.animation = .easeInOut(duration: 0.2)
-                        $0.dismissal.animation = .easeInOut(duration: 0.3)
-                    }) {
-                        ChartTimePickerView(showMenu: $showTimeMenu)
-                    }
                 }
                 .padding(.horizontal, 30)
                 .padding(.top, 20)
@@ -2106,84 +2099,6 @@ func getMaxText(maxi: Int) -> String {
         return stringArray[0] + "." + stringArray[1] + "k"
     } else {
         return String(maxi)
-    }
-}
-
-struct ChartTimePickerView: View {
-    @Namespace var animation
-    @State var timeframe = ChartTimeFrame.week
-    @Binding var showMenu: Bool
-
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var colourScheme: Int = 0
-
-    @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.xyz.draumaz.nickel")) var chartType = 1
-
-    @Environment(\.colorScheme) var systemColorScheme
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ForEach(ChartTimeFrame.allCases, id: \.self) { time in
-                HStack {
-                    Text(LocalizedStringKey(time.rawValue))
-                    Spacer()
-
-                    if time == timeframe {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .medium))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .font(.system(size: 18, weight: .medium, design: .rounded))
-                .padding(5)
-                .background {
-                    if time == timeframe {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(darkMode ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground"))
-                            .matchedGeometryEffect(id: "TAB", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if timeframe == time {
-                        showMenu = false
-                    } else {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            timeframe = time
-                        }
-
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                            showMenu = false
-                        }
-                    }
-                }
-            }
-        }
-        .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: 120)
-        .glassEffect(.regular, in: .rect(cornerRadius: 12))
-        .onChange(of: timeframe) { _ in
-            if timeframe == .week {
-                chartType = 1
-            } else if timeframe == .month {
-                chartType = 2
-            } else if timeframe == .year {
-                chartType = 3
-            }
-        }
-        .onAppear {
-            if chartType == 1 {
-                timeframe = ChartTimeFrame.week
-            } else if chartType == 2 {
-                timeframe = ChartTimeFrame.month
-            } else if chartType == 3 {
-                timeframe = ChartTimeFrame.year
-            }
-        }
     }
 }
 
