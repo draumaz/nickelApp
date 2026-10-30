@@ -41,7 +41,6 @@ struct ImportDataView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var dataController: DataController
 
-    @State private var exportSample = false
     @State private var importing = false
 
     @State private var data = ""
@@ -462,31 +461,18 @@ struct ImportDataView: View {
                 Spacer()
 
                 if progress == 1 {
-                    VStack(spacing: 12) {
-                        Button {
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
-                            importing = true
-                        } label: {
-                            Label("Import", systemImage: "square.and.arrow.down")
-                                .font(.system(.title3, design: .rounded).weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                        }
-                        .buttonStyle(.glassProminent)
-                        .controlSize(.large)
-
-                        Button {
-                            exportSample = true
-                        } label: {
-                            Text("Sample Sheet")
-                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                        }
-                        .buttonStyle(.glass)
-                        .controlSize(.large)
+                        importing = true
+                    } label: {
+                        Label("Import", systemImage: "square.and.arrow.down")
+                            .font(.system(.title3, design: .rounded).weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
                     }
+                    .buttonStyle(.glassProminent)
+                    .controlSize(.large)
 
                 } else {
                     Button {
@@ -602,11 +588,6 @@ struct ImportDataView: View {
                 } catch {}
             case let .failure(error):
                 print(error.localizedDescription)
-            }
-        }
-        .sheet(isPresented: $exportSample) {
-            if let url = Bundle.main.url(forResource: "sample", withExtension: "csv") {
-                ActivityViewController(activityItems: [url])
             }
         }
         .animation(.easeOut(duration: 0.2), value: showToast)
@@ -728,8 +709,7 @@ struct ImportDataView: View {
         }
     }
 
-    /// Index of an unassigned column whose values are all "Income" or "Expense", such as the
-    /// Type column in the sample sheet, if the file has one.
+    /// Index of an unassigned column whose values are all "Income" or "Expense", if the file has one.
     func typeColumnIndex() -> Int? {
         remainingColumns.first { index in
             let values = rows.map { $0.indices.contains(index) ? $0[index].trimmingCharacters(in: .whitespaces).lowercased() : "" }
@@ -850,18 +830,6 @@ struct ImportDataView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
-}
-
-struct ActivityViewController: UIViewControllerRepresentable {
-    var activityItems: [Any]
-    var applicationActivities: [UIActivity]?
-
-    func makeUIViewController(context _: UIViewControllerRepresentableContext<ActivityViewController>) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
-        return controller
-    }
-
-    func updateUIViewController(_: UIActivityViewController, context _: UIViewControllerRepresentableContext<ActivityViewController>) {}
 }
 
 struct RoundedCorner: Shape {
