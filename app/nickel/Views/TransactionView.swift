@@ -678,6 +678,8 @@ struct TransactionView: View {
                             }
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                // Dismiss the note keyboard so it doesn't cover the category picker
+                                textFieldFocused = false
                                 withAnimation(.easeInOut) {
                                     showCategoryPicker.toggle()
                                 }
@@ -1435,6 +1437,12 @@ struct NoteView: View {
         )
         .onChange(of: textFocused) { _, newValue in
             focused = newValue
+        }
+        .onChange(of: focused) { _, newValue in
+            // Allow the parent to dismiss the keyboard by clearing the binding
+            if !newValue {
+                textFocused = false
+            }
         }
     }
 
