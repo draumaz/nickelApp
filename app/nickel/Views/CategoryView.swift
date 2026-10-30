@@ -20,7 +20,6 @@ struct CategoryView: View {
     var mode: CategoryViewMode
 //    @Environment(\.colorScheme) var colorScheme
     @State var income = false
-    @Namespace var animation
 
     @State var newCategory = false
 
@@ -36,82 +35,22 @@ struct CategoryView: View {
     }
 
     var body: some View {
-        VStack(spacing: 5) {
-            CategoryListView(income: $income, mode: mode, showToast: $showToast, toastTitle: $toastTitle, toastImage: $toastImage, positive: $positive)
-
+        CategoryListView(income: $income, mode: mode, showToast: $showToast, toastTitle: $toastTitle, toastImage: $toastImage, positive: $positive)
+        // The type picker and New button float over the list in the controls layer,
+        // so the list scrolls beneath them with the system scroll edge effect.
+        .safeAreaBar(edge: .bottom) {
             HStack {
-                HStack(spacing: 0) {
-                    Text("Expense")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundColor(income == false ? Color.PrimaryText : Color.SubtitleText)
-                        .padding(6)
-                        .padding(.horizontal, 8)
-                        .background {
-                            if income == false {
-                                Capsule()
-                                    .fill(Color.SecondaryBackground)
-                                    .matchedGeometryEffect(id: "TAB1", in: animation)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            DispatchQueue.main.async {
-                                withAnimation(.easeIn(duration: 0.15)) {
-                                    income = false
-                                }
-                            }
-                        }
-
-                    Text("Income")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundColor(income == true ? Color.PrimaryText : Color.SubtitleText)
-                        .padding(6)
-                        .padding(.horizontal, 8)
-                        .background {
-                            if income == true {
-                                Capsule()
-                                    .fill(Color.SecondaryBackground)
-                                    .matchedGeometryEffect(id: "TAB1", in: animation)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            DispatchQueue.main.async {
-                                withAnimation(.easeIn(duration: 0.15)) {
-                                    income = true
-                                }
-                            }
-                        }
+                Picker("Category Type", selection: $income.animation(.easeIn(duration: 0.15))) {
+                    Text("Expense").tag(false)
+                    Text("Income").tag(true)
                 }
-                .padding(3)
+                .pickerStyle(.segmented)
+                .fixedSize()
                 .layoutPriority(1)
-                .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
 
                 Spacer()
 
-                HStack(spacing: 3) {
-                    Image(systemName: "plus")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 14.5, weight: .semibold, design: .rounded))
-
-                    Text("New")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .lineLimit(1)
-                }
-                .foregroundColor(Color.PrimaryText)
-                .padding(6)
-                .padding(.horizontal, 4.5)
-                .background(Color.SecondaryBackground, in: Capsule())
-                .opacity(disabled ? 0.5 : 1)
-                .contentShape(Rectangle())
-                .onTapGesture {
+                Button {
                     if disabled {
                         showToast = true
                         toastImage = "exclamationmark.triangle.fill"
@@ -120,9 +59,18 @@ struct CategoryView: View {
                     } else {
                         newCategory = true
                     }
+                } label: {
+                    Label("New", systemImage: "plus")
+                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .lineLimit(1)
                 }
+                .buttonStyle(.glass)
+                .opacity(disabled ? 0.5 : 1)
             }
-            .padding(25)
+            .controlSize(.large)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
         }
         .sheet(isPresented: $newCategory) {
             NewCategoryAlert(income: $income, bottomSpacers: false)
@@ -204,199 +152,63 @@ struct CategoryListView: View {
 //                        .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .foregroundColor(toastColor)
                 }
-                .padding(8)
-                .background(toastColor.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .padding(.vertical, 10)
+                .padding(.horizontal, 16)
+                .glassEffect(.regular.tint(toastColor.opacity(0.15)), in: .capsule)
                 .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
                 .frame(maxWidth: 250)
                 .frame(height: 35)
-                .padding(20)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
             } else {
-                if mode == .welcome {
+                GlassEffectContainer(spacing: 8) {
                     HStack(spacing: 8) {
-                        if categories.count > 1 {
-                            if isEditing {
-                                Circle()
-                                    .fill(Color.IncomeGreen.opacity(0.23))
-                                    .frame(width: 33, height: 33)
-                                    .overlay {
-                                        Image(systemName: "checkmark")
-                                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(Color.IncomeGreen)
-                                    }
-                                    .onTapGesture {
-                                        withAnimation {
-                                            isEditing.toggle()
-                                        }
-                                    }
-                            } else {
-                                Circle()
-                                    .fill(Color.SecondaryBackground)
-                                    .frame(width: 33, height: 33)
-                                    .overlay {
-                                        Image(systemName: "arrow.up.arrow.down")
-                                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                                            .foregroundColor(Color.SubtitleText)
-                                    }
-                                    .onTapGesture {
-                                        withAnimation {
-                                            isEditing.toggle()
-                                        }
-                                    }
-                            }
-                        }
+                        if mode == .welcome {
+                            reorderButton
+                            suggestionsButton
 
-                        Circle()
-                            .fill(Color.SecondaryBackground)
-                            .frame(width: 33, height: 33)
-                            .overlay {
-                                Image(systemName: showSuggestions ? "eye.slash" : "eye")
-                                    .font(.system(.callout, design: .rounded).weight(.semibold))
-                                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                                    .foregroundColor(Color.SubtitleText)
-                                    .offset(y: 0.8)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    showSuggestions.toggle()
-                                }
-                            }
+                            Spacer()
 
-                        Spacer()
-
-                        Circle()
-                            .fill(!allCategories.isEmpty ? Color.IncomeGreen.opacity(0.23) : Color.clear)
-                            .frame(width: 33, height: 33)
-                            .overlay {
-                                ZStack {
-                                    Image(systemName: "arrow.right")
-                                        .font(.system(.callout, design: .rounded).weight(.semibold))
-                                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                                        .foregroundColor(!allCategories.isEmpty ? Color.IncomeGreen : Color.Outline.opacity(0.8))
-
-                                    if allCategories.count == 0 {
-                                        Circle()
-                                            .stroke(Color.Outline.opacity(0.4), lineWidth: 1.3)
-                                            .frame(width: 33, height: 33)
-                                    }
-                                }
+                            // Continue is the primary action of the welcome flow, so it alone gets a tinted glass.
+                            Button {
+                                dismiss()
+                            } label: {
+                                headerIcon("arrow.right")
                             }
-                            .onTapGesture {
-                                if allCategories.count > 0 {
-                                    dismiss()
-                                }
-                            }
-                    }
-                    .frame(height: 35)
-                    .frame(maxWidth: .infinity)
-                    .overlay {
-                        Text("Categories")
-                            .font(.system(.title3, design: .rounded).weight(.medium))
-                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                            .font(.system(size: 20, weight: .medium, design: .rounded))
-                    }
-                    .padding(20)
-
-                } else {
-                    HStack(spacing: 8) {
-                        if mode == .settings {
-                            Circle()
-                                .fill(Color.SecondaryBackground)
-                                .frame(width: 33, height: 33)
-                                .overlay {
-                                    Image(systemName: "chevron.left")
-                                        .font(.system(.body, design: .rounded).weight(.semibold))
-                                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                        .font(.system(size: 18, weight: .semibold))
-                                        .foregroundColor(Color.SubtitleText)
-                                        .offset(y: 0.8)
-                                }
-                                .onTapGesture {
-                                    self.presentationMode.wrappedValue.dismiss()
-                                }
+                            .buttonStyle(.glassProminent)
+                            .buttonBorderShape(.circle)
+                            .tint(Color.IncomeGreen)
+                            .disabled(allCategories.isEmpty)
+                            .accessibilityLabel("Continue")
                         } else {
-                            Circle()
-                                .fill(Color.SecondaryBackground)
-                                .frame(width: 33, height: 33)
-                                .overlay {
-                                    Image(systemName: "chevron.down")
-                                        .font(.system(.body, design: .rounded).weight(.semibold))
-                                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                                        .foregroundColor(Color.SubtitleText)
-                                        .offset(y: 0.8)
-                                }
-                                .onTapGesture {
+                            Button {
+                                if mode == .settings {
+                                    self.presentationMode.wrappedValue.dismiss()
+                                } else {
                                     dismiss()
                                 }
-                        }
-
-                        Spacer()
-
-                        Circle()
-                            .fill(Color.SecondaryBackground)
-                            .frame(width: 33, height: 33)
-                            .overlay {
-                                Image(systemName: showSuggestions ? "eye.slash" : "eye")
-                                    .font(.system(.callout, design: .rounded).weight(.semibold))
-                                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(Color.SubtitleText)
-                                    .offset(y: 0.8)
+                            } label: {
+                                headerIcon(mode == .settings ? "chevron.left" : "chevron.down")
                             }
-                            .onTapGesture {
-                                withAnimation {
-                                    showSuggestions.toggle()
-                                }
-                            }
+                            .buttonStyle(.glass)
+                            .buttonBorderShape(.circle)
+                            .accessibilityLabel(mode == .settings ? "Back" : "Close")
 
-                        if categories.count > 1 {
-                            if isEditing {
-                                Circle()
-                                    .fill(Color.IncomeGreen.opacity(0.23))
-                                    .frame(width: 33, height: 33)
-                                    .overlay {
-                                        Image(systemName: "checkmark")
-                                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(Color.IncomeGreen)
-                                    }
-                                    .onTapGesture {
-                                        withAnimation {
-                                            isEditing.toggle()
-                                        }
-                                    }
-                            } else {
-                                Circle()
-                                    .fill(Color.SecondaryBackground)
-                                    .frame(width: 33, height: 33)
-                                    .overlay {
-                                        Image(systemName: "arrow.up.arrow.down")
-                                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(Color.SubtitleText)
-                                    }
-                                    .onTapGesture {
-                                        withAnimation {
-                                            isEditing.toggle()
-                                        }
-                                    }
-                            }
+                            Spacer()
+
+                            suggestionsButton
+                            reorderButton
                         }
                     }
-                    .frame(height: 35)
-                    .frame(maxWidth: .infinity)
-                    .overlay {
-                        Text("Categories")
-                            .font(.system(.title3, design: .rounded).weight(mode == .settings ? .semibold : .medium))
-                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                            .font(.system(size: 20, weight: mode == .settings ? .semibold : .medium, design: .rounded))
-                    }
-                    .padding(20)
                 }
+                .frame(maxWidth: .infinity)
+                .overlay {
+                    Text("Categories")
+                        .font(.system(.title3, design: .rounded).weight(mode == .settings ? .semibold : .medium))
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
             }
 
             VStack {
@@ -604,6 +416,59 @@ struct CategoryListView: View {
                 toastImage = "eye.slash"
                 showToast = true
                 positive = true
+            }
+        }
+    }
+
+    /// A header glyph sized to match the other circular glass buttons in the app.
+    private func headerIcon(_ systemImage: String) -> some View {
+        Image(systemName: systemImage)
+            .font(.system(.callout, design: .rounded).weight(.semibold))
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .frame(width: 30, height: 30)
+            .contentTransition(.symbolEffect(.replace))
+    }
+
+    private var suggestionsButton: some View {
+        Button {
+            withAnimation {
+                showSuggestions.toggle()
+            }
+        } label: {
+            headerIcon(showSuggestions ? "eye.slash" : "eye")
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .accessibilityLabel(showSuggestions ? "Hide Suggestions" : "Show Suggestions")
+    }
+
+    /// Toggles reordering. While reordering, the button becomes a tinted Done checkmark.
+    @ViewBuilder
+    private var reorderButton: some View {
+        if categories.count > 1 {
+            if isEditing {
+                Button {
+                    withAnimation {
+                        isEditing = false
+                    }
+                } label: {
+                    headerIcon("checkmark")
+                }
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.circle)
+                .tint(Color.IncomeGreen)
+                .accessibilityLabel("Done")
+            } else {
+                Button {
+                    withAnimation {
+                        isEditing = true
+                    }
+                } label: {
+                    headerIcon("arrow.up.arrow.down")
+                }
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+                .accessibilityLabel("Reorder")
             }
         }
     }
