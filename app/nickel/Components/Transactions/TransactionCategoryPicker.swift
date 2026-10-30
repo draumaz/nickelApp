@@ -14,7 +14,6 @@ struct NewCategoryPickerView: View {
     @Binding var showPicker: Bool
     @Binding var showingCategoryView: Bool
     @FetchRequest private var categories: FetchedResults<Category>
-    @Environment(\.colorScheme) var colorScheme
 
     let layout = [
         GridItem(.flexible(), spacing: 10),
@@ -25,81 +24,80 @@ struct NewCategoryPickerView: View {
         ScrollView(showsIndicators: false) {
             LazyVGrid(columns: layout, spacing: 10) {
                 ForEach(categories) { item in
-                    HStack(spacing: 7) {
-                        Text(item.wrappedEmoji)
-                            .font(.system(.subheadline, design: .rounded))
-
-                        Text(item.wrappedName)
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                            .lineLimit(1)
-                    }
-                    .id(item.id)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 9)
-                    .foregroundColor(Color(hex: item.wrappedColour))
-                    .background(
-                        Color(hex: item.wrappedColour).opacity(0.35),
-                        in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                    )
-                    .contentShape(Rectangle())
-                    .overlay {
-                        if item == category {
-                            RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                .strokeBorder(Color(hex: item.wrappedColour),
-                                              style: StrokeStyle(lineWidth: 2))
-                        }
-                    }
-                    .onTapGesture {
-                        withAnimation {
-                            category = item
-                        }
-
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            withAnimation {
-                                showPicker = false
-                            }
-                        }
-                    }
-                    .opacity(category != nil ? (category == item ? 1 : 0.5) : 1)
-
+                    categoryButton(for: item)
                 }
             }
         }
-        .keyboardAwareHeight(showToolbar: false)
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        .overlay(alignment: .bottom) {
-            HStack(spacing: 4) {
-                Image(systemName: "pencil")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-                Text("Edit")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-            }
-            .padding(.vertical, 9)
-            .padding(.horizontal, 18)
-            .foregroundColor(Color.SubtitleText)
-            .background(
-                RoundedRectangle(cornerRadius: 11.5, style: .continuous).fill(Color.SecondaryBackground).shadow(
-                    color: colorScheme == .light ? Color.Outline  : Color.clear, radius: 6)
-            )
-//            .background(
-//                Color.SecondaryBackground,
-//                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-//            )
-//            .overlay {
-//                RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-//                    .strokeBorder(Color.Outline, style: StrokeStyle(lineWidth: 2, dash: [10]))
-//            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                let impactMed = UIImpactFeedbackGenerator(style: .light)
-                impactMed.impactOccurred()
+        // The Edit control floats above the grid in the controls layer, so the grid scrolls
+        // beneath it with a soft scroll edge effect rather than a hand-drawn shadow.
+        .safeAreaBar(edge: .bottom) {
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 showPicker = false
                 showingCategoryView = true
+            } label: {
+                Label("Edit", systemImage: "pencil")
+                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .padding(.horizontal, 6)
             }
-            .padding(.bottom, 15)
+            .buttonStyle(.glass)
+            .controlSize(.large)
+            .padding(.vertical, 10)
         }
+        .scrollEdgeEffectStyle(.soft, for: .bottom)
+        .keyboardAwareHeight(showToolbar: false)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
 
+    /// A tinted chip for a single category. Chips are content, so they use the category colour
+    /// rather than Liquid Glass, which is reserved for the floating controls above them.
+    private func categoryButton(for item: Category) -> some View {
+        let colour = Color(hex: item.wrappedColour)
+        let isSelected = item == category
+
+        return Button {
+            withAnimation {
+                category = item
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation {
+                    showPicker = false
+                }
+            }
+        } label: {
+            HStack(spacing: 7) {
+                Text(item.wrappedEmoji)
+                    .font(.system(.subheadline, design: .rounded))
+
+                Text(item.wrappedName)
+                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .foregroundStyle(colour)
+            .background(colour.opacity(isSelected ? 0.45 : 0.3), in: .rect(cornerRadius: 14, style: .continuous))
+            .overlay {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(colour, lineWidth: 2)
+                }
+            }
+            .contentShape(.rect(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .id(item.id)
+        .opacity(category == nil || isSelected ? 1 : 0.5)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     init(
